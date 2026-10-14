@@ -278,6 +278,27 @@ function allocateRecovery(gens: number[], weights: number[], total: number): num
   return out;
 }
 
+// Starting global recovery rate, computed from the regional 2022 figures so the maths is self-consistent.
+const BASE_RATE = REGIONS.reduce((a, r) => a + r.gen2022 * r.recovery2022, 0) / REGIONS.reduce((a, r) => a + r.gen2022, 0);
+const RATE_CAP = 0.95;
+
+// Finds each region's recovery rate so that the generation-weighted global rate equals `goal`.
+// Every region moves up by k times its uplift weight (regions with more headroom catch up faster) and no region
+// can exceed RATE_CAP. The weighted rate rises steadily with k, so k is found by bisection.
+function solveRates(gens: number[], base: number[], uplift: number[], goal: number): number[] {
+  const total = gens.reduce((a, b) => a + b, 0);
+  const ratesAt = (k: number) => base.map((b, i) => Math.min(RATE_CAP, Math.max(0, b + k * uplift[i])));
+  const weighted = (k: number) => ratesAt(k).reduce((a, r, i) => a + r * gens[i], 0) / total;
+  let lo = -2;
+  let hi = 5;
+  for (let n = 0; n < 60; n++) {
+    const mid = (lo + hi) / 2;
+    if (weighted(mid) < goal) lo = mid;
+    else hi = mid;
+  }
+  return ratesAt((lo + hi) / 2);
+}
+
 export function simulate({ growthCut, recoveryTarget }: Inputs): YearPoint[] {
   const out: YearPoint[] = [];
   const years = END_YEAR - START_YEAR;
@@ -292,21 +313,21 @@ export function simulate({ growthCut, recoveryTarget }: Inputs): YearPoint[] {
     let controlledLandfillTotal = 0;
     const byRegion: YearPoint["byRegion"] = [];
 
-    for (const r of REGIONS) {
-      const base = baselineGen(r, year);
-      // Prevention cuts generation growth above the 2022 baseline
-      const gen = r.gen2022 + (base - r.gen2022) * (1 - (growthCut / 100) * t);
+    // Prevention cuts generation growth above the 2022 baseline
+    const regionGens = REGIONS.map((r) => r.gen2022 + (baselineGen(r, year) - r.gen2022) * (1 - (growthCut / 100) * t));
+    // The global recovery rate moves in a straight line from today's rate to the scenario target in 2050.
+    // Regions with more headroom (lower starting rate) do proportionally more of the catching up.
+    const goal = BASE_RATE + t * (recoveryTarget / 100 - BASE_RATE);
+    const regionRates = solveRates(
+      regionGens,
+      REGIONS.map((r) => r.recovery2022),
+      REGIONS.map((r) => 0.5 + 0.8 * (1 - r.recovery2022)),
+      goal,
+    );
 
-      // Desired regional recovery rate:
-      // Regions with lower initial rates have higher headroom
-      const headroom = 1 - r.recovery2022;
-      // Uplift towards the target recovery rate (recoveryTarget is in percentage points or percentage)
-      // When recoveryTarget is e.g. 27% (BAU) or 54% (high), compute delta relative to 2022 baseline (21.4%)
-      const deltaGlobal = (recoveryTarget - GLOBAL_RECOVERY_2022 * 100) / 100;
-      const rate = Math.min(
-        0.95,
-        Math.max(r.recovery2022, r.recovery2022 + deltaGlobal * t * (0.5 + headroom * 0.8))
-      );
+    for (const [i, r] of REGIONS.entries()) {
+      const gen = regionGens[i];
+      const rate = regionRates[i];
 
       const regRecovered = gen * rate;
       const regResidual = gen - regRecovered;
@@ -346,7 +367,9 @@ export function simulate({ growthCut, recoveryTarget }: Inputs): YearPoint[] {
     const foodAndGardenResidual =
       byMaterial.find((m) => m.id === "food")!.residual +
       byMaterial.find((m) => m.id === "garden")!.residual;
-    // Calibrated so 2022 gives ~1,150 Mt CO2e (What a Waste 3.0 Chapter 5, p. 831)
+    // 1.16 t CO2e per tonne of unrecovered food and garden waste. Calibrated so 2022 gives about 1.15 Gt CO2e,
+    // the methane figure in the register (entry methane_emissions: What a Waste 3.0 Executive Summary p. 8 and
+    // Chapter 5, as recorded there). Explained in the register entry co2e_scaling.
     const co2eMethane = foodAndGardenResidual * 1.16;
 
     out.push({

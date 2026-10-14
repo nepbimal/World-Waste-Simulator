@@ -339,6 +339,16 @@ export function statusCounts(): Record<Status, number> {
 
 export const MODEL_ASSUMPTIONS: Entry[] = [
   {
+    id: "co2e_scaling",
+    category: "Model assumptions",
+    metric: "Climate figure in the Impact panel (CO2e from waste)",
+    value: "Food and garden waste that is not recovered, times 1.16 t CO2e per tonne",
+    year: "2022 to 2050",
+    status: "derived",
+    note: "The factor 1.16 is set so the model's 2022 result (about 1,140 Mt CO2e) matches the 1.15 Gt CO2e methane figure in the methane_emissions entry. It is a single calibration factor, not a measured emission factor, and it ignores differences between landfill types, gas capture and climate. The earlier code comment cited page 831 of the report, which cannot be right for a 384-page report; the page reference now points to the methane_emissions entry, whose own page numbers I could not check.",
+    sources: [WB_REPORT],
+  },
+  {
     id: "cost_trajectory",
     category: "Model assumptions",
     metric: "Municipal operating cost shown in the Impact panel",

@@ -6,6 +6,7 @@ import {
   GLOBAL_RECOVERY_2022,
   MATERIALS,
   REGIONS,
+  SCENARIOS,
   START_YEAR,
   simulate,
 } from "../waste-model";
@@ -50,6 +51,40 @@ describe("waste model: anchors", () => {
     const lowRec = simulate({ growthCut: 0, recoveryTarget: 30 }).at(-1)!;
     const highRec = simulate({ growthCut: 0, recoveryTarget: 60 }).at(-1)!;
     expect(highRec.recoveryRate).toBeGreaterThan(lowRec.recoveryRate);
+  });
+});
+
+describe("waste model: recovery targets", () => {
+  it("ends 2050 exactly at each preset scenario's recovery target", () => {
+    for (const sc of SCENARIOS) {
+      const last = simulate({ growthCut: sc.growthCut, recoveryTarget: sc.recoveryTarget }).at(-1)!;
+      expect(last.recoveryRate, sc.name).toBeCloseTo(sc.recoveryTarget / 100, 3);
+    }
+  });
+
+  it("also hits custom targets between the slider limits, as long as the 95% regional cap allows", () => {
+    for (const target of [20, 35, 60, 80]) {
+      const last = simulate({ growthCut: 30, recoveryTarget: target }).at(-1)!;
+      expect(last.recoveryRate, `target ${target}`).toBeCloseTo(target / 100, 3);
+    }
+  });
+
+  it("moves in a straight line from today's rate to the target", () => {
+    const d = simulate({ growthCut: 0, recoveryTarget: 54 });
+    const a = d[0].recoveryRate;
+    const b = d.at(-1)!.recoveryRate;
+    for (const [i, y] of d.entries()) {
+      expect(y.recoveryRate).toBeCloseTo(a + ((b - a) * i) / (d.length - 1), 3);
+    }
+  });
+
+  it("gives regions with more headroom a bigger catch-up, and respects the 95% cap", () => {
+    const d = simulate({ growthCut: 0, recoveryTarget: 54 });
+    const first = d[0].byRegion;
+    const last = d.at(-1)!.byRegion;
+    const gain = (id: string) => last.find((r) => r.id === id)!.recovery - first.find((r) => r.id === id)!.recovery;
+    expect(gain("ssa")).toBeGreaterThan(gain("na"));
+    for (const y of d) for (const r of y.byRegion) expect(r.recovery).toBeLessThanOrEqual(0.95 + 1e-9);
   });
 });
 
