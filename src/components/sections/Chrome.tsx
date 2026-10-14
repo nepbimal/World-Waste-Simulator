@@ -109,7 +109,6 @@ export function Footer() {
         </div>
       </div>
       <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-1">
-        <Link className="underline-offset-4 hover:text-ink hover:underline" href="/impressum">Impressum</Link>
         <Link className="underline-offset-4 hover:text-ink hover:underline" href="/privacy">Privacy</Link>
         <Link className="underline-offset-4 hover:text-ink hover:underline" href="/terms">Terms and disclaimer</Link>
       </nav>

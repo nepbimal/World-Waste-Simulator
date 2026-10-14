@@ -1,18 +1,13 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Aurora } from "../ui/Aurora";
-import { LEGAL_UPDATED, missingHostingFields, missingOperatorFields } from "@/lib/legal";
+export const LEGAL_UPDATED = "14 October 2026";
+export const CONTACT_URL = "https://github.com/nepbimal/World-Waste-Simulator/issues";
 
 export const LEGAL_LINKS = [
-  { href: "/impressum", label: "Impressum" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms and disclaimer" },
 ];
-
-// A value the operator has not supplied yet is shown highlighted, never invented.
-export function Fill({ value, label }: { value: string; label: string }) {
-  return value.trim() ? <>{value}</> : <mark className="rounded bg-gold/20 px-1 text-gold">[{label}]</mark>;
-}
 
 export function H2({ children }: { children: ReactNode }) {
   return <h2 className="mt-10 font-display text-2xl text-ink">{children}</h2>;
@@ -24,8 +19,7 @@ export function UL({ children }: { children: ReactNode }) {
   return <ul className="mt-3 list-disc space-y-1.5 pl-5 leading-relaxed text-mute">{children}</ul>;
 }
 
-export function LegalShell({ title, german, children, needsHosting }: { title: string; german?: string; children: ReactNode; needsHosting?: boolean }) {
-  const missing = [...missingOperatorFields().map((f) => `operator ${f}`), ...(needsHosting ? missingHostingFields().map((f) => `hosting ${f}`) : [])];
+export function LegalShell({ title, german, children }: { title: string; german?: string; children: ReactNode }) {
   return (
     <>
       <Aurora />
@@ -39,11 +33,6 @@ export function LegalShell({ title, german, children, needsHosting }: { title: s
         </div>
       </header>
       <main className="mx-auto w-full max-w-3xl px-4 pb-24 pt-14 sm:px-6">
-        {missing.length > 0 && (
-          <div role="alert" className="mb-8 rounded-2xl border border-gold/40 bg-gold/10 p-4 text-sm leading-relaxed text-gold">
-            <b>Template: details missing.</b> This page cannot be relied on until the highlighted fields are filled in (in <code>src/lib/legal.ts</code>). Missing: {missing.join(", ")}.
-          </div>
-        )}
         <h1 className="font-display text-5xl leading-tight">{title}</h1>
         {german && <p className="mt-1 italic text-dim">{german}</p>}
         <p className="mt-3 text-sm text-dim">Last updated {LEGAL_UPDATED}</p>

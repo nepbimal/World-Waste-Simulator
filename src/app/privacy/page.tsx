@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
-import { Fill, H2, LegalShell, P, UL } from "@/components/legal/LegalShell";
-import { hosting, operator } from "@/lib/legal";
+import { CONTACT_URL, H2, LegalShell, P, UL } from "@/components/legal/LegalShell";
 
 export const metadata: Metadata = { title: "Privacy policy | World Waste Simulator", description: "How this website handles personal data." };
 
 export default function Privacy() {
   return (
-    <LegalShell title="Privacy policy" german="Datenschutzerklärung" needsHosting>
+    <LegalShell title="Privacy policy" german="Datenschutzerklärung">
       <H2>1. Who is responsible</H2>
       <P>
-        The controller under the General Data Protection Regulation (GDPR) is{" "}
-        <Fill value={operator.name} label="full name" />, <Fill value={operator.street} label="street and number" />,{" "}
-        <Fill value={operator.postalCode} label="postal code" /> <Fill value={operator.city} label="city" />, <Fill value={operator.country} label="country" />.
-        Email: <Fill value={operator.email} label="email address" />. The Impressum has the full provider details.
+        World Waste Simulator is an open-source project. To contact the person responsible about this policy or about your data, open an issue in the project&apos;s{" "}
+        <a className="text-leaf underline" href={CONTACT_URL} target="_blank" rel="noreferrer">GitHub repository</a>.
       </P>
 
       <H2>2. In short</H2>
@@ -25,15 +22,14 @@ export default function Privacy() {
 
       <H2>3. Hosting and server log files</H2>
       <P>
-        The website is delivered by <Fill value={hosting.provider} label="hosting provider" /> (servers: <Fill value={hosting.location} label="server location" />).
-        When you open a page, the hosting provider&apos;s servers automatically record technical data in log files: your IP address, the date and time, the page requested, the response status, the amount of data sent, the referring page and your browser and operating system.
+        The website is delivered by a hosting provider. When you open a page, the provider&apos;s servers automatically record technical data in log files: your IP address, the date and time, the page requested, the response status, the amount of data sent, the referring page and your browser and operating system.
       </P>
       <P>
-        Purpose: delivering the site, keeping it secure and stable, and finding errors or abuse. Legal basis: Art. 6 (1) (f) GDPR, my legitimate interest in running a secure website.
-        Retention: the provider keeps the logs for <Fill value={hosting.logRetention} label="retention period" /> and then deletes them. The data is not combined with other data and is not used to identify you.
+        Purpose: delivering the site, keeping it secure and stable, and finding errors or abuse. Legal basis: Art. 6 (1) (f) GDPR, a legitimate interest in running a secure website.
+        The provider keeps the logs for a short period set by its own policy and then deletes them. The data is not combined with other data and is not used to identify you.
       </P>
       <P>
-        The hosting provider acts on my behalf as a processor under a data processing agreement (Art. 28 GDPR). If it processes data outside the EU or the European Economic Area, this happens only with the safeguards required by Chapter V of the GDPR, such as the EU-US Data Privacy Framework or standard contractual clauses.
+        If the provider processes data outside the EU or the European Economic Area, this should happen only with the safeguards required by Chapter V of the GDPR, such as the EU-US Data Privacy Framework or standard contractual clauses. Check the provider&apos;s own privacy policy for details.
       </P>
 
       <H2>4. Cookies and similar technologies</H2>
@@ -56,7 +52,7 @@ export default function Privacy() {
         <li>complain to a data protection supervisory authority (Art. 77), for example in the country where you live or work.</li>
       </UL>
       <P>
-        Because the site holds no personal data beyond the short-lived server logs, which I cannot link to a person, I may not be able to identify you in them. To use any of these rights, write to <Fill value={operator.email} label="email address" />.
+        Because the site holds no personal data beyond the short-lived server logs, which I cannot link to a person, I may not be able to identify you in them. To use any of these rights, open an issue in the project&apos;s GitHub repository (see section 1).
       </P>
 
       <H2>7. No automated decisions</H2>

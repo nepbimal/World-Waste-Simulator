@@ -30,12 +30,11 @@ npm run dev
 The agent-based model re-implements the ideas behind MiroFish/OASIS-style simulations (stochastic agent activation,
 similarity-weighted neighbour influence, seeded Monte Carlo ensembles). MiroFish itself is AGPL-3.0 and is not used here.
 
-## Before you publish: legal details
+## Legal pages
 
-The site has an Impressum (`/impressum`), a privacy policy (`/privacy`) and terms and disclaimer (`/terms`), linked from the footer.
-They are templates. The operator's name, address, email and the hosting provider's details are deliberately left empty,
-and each page shows a "details missing" notice until you fill them in `src/lib/legal.ts`. Fill them in before you make the
-site public. The pages describe how the site works today (no cookies, no local storage, no analytics, no forms, fonts served
-from the site itself); if you add any of those, update the privacy policy first. These templates are not legal advice.
-The terms page also asks you to choose a licence for the source code, because the repository has none yet.
-
+The site has a privacy policy (`/privacy`) and terms and disclaimer (`/terms`), linked from the footer. They contain no personal
+details: contact is through issues on the project's GitHub repository. There is no Impressum, because an Impressum consists of the
+operator's name, address and email. If the site is run commercially or from Germany in a way that requires one, add an
+`/impressum` page with those details before relying on the site. The pages describe how the site works today (no cookies, no
+local storage, no analytics, no forms, fonts served from the site itself); if you add any of those, update the privacy policy
+first. These templates are not legal advice. The repository has no licence file yet, so by default all rights are reserved.

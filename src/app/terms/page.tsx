@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import { Fill, H2, LegalShell, P, UL } from "@/components/legal/LegalShell";
-import { operator } from "@/lib/legal";
+import { CONTACT_URL, H2, LegalShell, P, UL } from "@/components/legal/LegalShell";
 
 export const metadata: Metadata = { title: "Terms and disclaimer | World Waste Simulator", description: "Terms of use, disclaimer and copyright notes." };
 
@@ -27,17 +26,17 @@ export default function Terms() {
       </P>
 
       <H2>4. Links to other websites</H2>
-      <P>I have no control over the content of linked websites and am not responsible for it. I checked the links when I added them; if you find one that is unlawful or wrong, please tell me.</P>
+      <P>The project has no control over the content of linked websites and is not responsible for it. Links were checked when they were added; if you find one that is unlawful or wrong, please open an issue.</P>
 
       <H2>5. Copyright and data</H2>
       <UL>
-        <li>The text, design and code of this site are © <Fill value={operator.name} label="rights holder" />. The source code licence is: <Fill value="" label="add a licence, for example MIT" />. Until a licence is added, all rights are reserved.</li>
+        <li>The text, design and code of this site are not licensed for reuse unless a licence file in the project&apos;s repository says so. Until then, all rights are reserved.</li>
         <li>The figures belong to the organisations that published them and are cited in the register. Check their own terms of use before you reuse a figure, and credit the original publisher.</li>
         <li>Names and logos of organisations mentioned belong to their owners. This site is not affiliated with or endorsed by them.</li>
       </UL>
 
       <H2>6. Accessibility feedback</H2>
-      <P>The site is built to be used with a keyboard and a screen reader and to work on phones. If something does not work for you, write to <Fill value={operator.email} label="email address" /> and I will try to fix it.</P>
+      <P>The site is built to be used with a keyboard and a screen reader and to work on phones. If something does not work for you, open an issue in the project&apos;s <a className="text-leaf underline" href={CONTACT_URL} target="_blank" rel="noreferrer">GitHub repository</a> and it will be looked at.</P>
 
       <H2>7. Changes</H2>
       <P>I may change these terms when the site changes. The date at the top shows the latest version. This text is a template, not legal advice.</P>
