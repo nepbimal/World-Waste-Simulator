@@ -307,6 +307,52 @@ export const REGISTER: Entry[] = [
     sources: [EPA_FACTS],
   },
 
+  // ---- Recycling pace benchmarks ----
+  {
+    id: "pace_eu_recent",
+    category: "Recycling pace benchmarks",
+    metric: "EU-27 average yearly gain in the municipal recycling rate",
+    value: "about +0.5 points a year (43.0% in 2014 to 48.1% in 2024)",
+    year: "2014 to 2024",
+    status: "derived",
+    note: "Pace calculated here from Eurostat's rates as reported by the press: 48.1% (2024) and 48.0% (2023) are in several reports, but the 2014 figure of 43.0% appears in only one (Brussels Times). An earlier Eurostat release gave 37.2% for 2013 and 48.0% for 2023 (about +1.1 a year), so revisions to the method change the answer. I did not read the Eurostat table itself.",
+    sources: [
+      { label: "Eurostat news, 30 March 2026", url: "https://ec.europa.eu/eurostat/web/products-eurostat-news/w/ddn-20260330-1", publisher: true },
+      { label: "Brussels Times", url: "https://www.brusselstimes.com/eu-affairs/2052523/eu-municipal-waste-hits-517-kg-per-capita-as-trends-worsen/" },
+      { label: "Recycling Magazine", url: "https://www.recycling-magazine.com/26752/517-kg-municipal-waste-per-capita-in-2024" },
+    ],
+  },
+  {
+    id: "pace_eu_2004",
+    category: "Recycling pace benchmarks",
+    metric: "EU yearly gain in the municipal recycling rate, earlier decade",
+    value: "about +1.3 points a year (30% in 2004 to 43% in 2014)",
+    year: "2004 to 2014",
+    status: "single",
+    note: "European Environment Agency briefing for the EU-28, which counts material recycling, composting and digestion and excludes Croatia in 2004 to 2006. It uses an older definition than the 2014 to 2024 figures above, so the two decades are not strictly comparable.",
+    sources: [{ label: "EEA: Recycling of municipal waste (2016)", url: "https://www.eea.europa.eu/airs/2016/resource-efficiency-and-low-carbon-economy/recycling-of-municipal-waste", publisher: true }],
+  },
+  {
+    id: "pace_poland",
+    category: "Recycling pace benchmarks",
+    metric: "Poland: fast national gain",
+    value: "about +2.7 points a year (5% in 2004 to 21% in 2010)",
+    year: "2004 to 2010",
+    status: "single",
+    note: "European Environment Agency country assessment. Counts material and organic recycling only, and the EEA warns that coverage of the data changed over the period. Six years only, starting from a very low base.",
+    sources: [{ label: "EEA: Municipal waste management in Poland", url: "https://www.eea.europa.eu/publications/managing-municipal-solid-waste/poland-municipal-waste-management", publisher: true }],
+  },
+  {
+    id: "pace_slovenia",
+    category: "Recycling pace benchmarks",
+    metric: "Slovenia: fastest sustained national gain found",
+    value: "about +2.5 points a year (3% in 2001 to 36% in 2014)",
+    year: "2001 to 2014",
+    status: "single",
+    note: "EIONET country profile using national reporting. A second table I found (source not identified, so not linked) gives 21.9% in 2007 and 59.8% in 2023, about +2.4 a year, which fits. Eurostat and national figures for Slovenia differ by methodology (Eurostat showed 37% already in 2008 in an EEA profile), so the pace is approximate. Thirteen years from a very low base in a small country.",
+    sources: [{ label: "EIONET: Slovenia municipal waste country profile (2016)", url: "https://www.eionet.europa.eu/etcs/etc-ce/products/country-profiles-on-the-management-of-municipal-waste-1/slovenia_msw_2016.pdf", publisher: true }],
+  },
+
   // ---- Wildlife ----
   {
     id: "redlist",
@@ -362,10 +408,10 @@ export const MODEL_ASSUMPTIONS: Entry[] = [
     id: "gmax",
     category: "Model assumptions",
     metric: "Maximum realistic pace of annual recycling gain",
-    value: "2.5 percentage points / year (user-adjustable slider)",
+    value: "2.5 percentage points a year (slider default, adjustable)",
     year: "n/a",
     status: "estimate",
-    note: "Project assumption / slider default. No single sourced global benchmark exists; provided as a user lever in the feasibility solver.",
+    note: "A judgement, not a forecast. 2.5 matches the fastest sustained national gains found in the pace_slovenia and pace_poland entries (about 2.4 to 2.7 points a year). Those countries started from 3 to 5% and are small, so a global pace this fast is not guaranteed. The EU as a whole managed 0.5 to 1.3 points a year (pace_eu_recent, pace_eu_2004). No source gives a pace for the world as a whole.",
     sources: [],
   },
   {

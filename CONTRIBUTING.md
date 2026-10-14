@@ -67,8 +67,9 @@ stronger policy, circular economy) plus custom sliders. It also shows:
 4. **Species.** Build a sourced "species at risk from waste and pollution" section from IUCN Red List data and
    peer-reviewed studies (marine animals and plastic, ghost gear, seabirds). Show the uncertainty, give no invented
    rankings or dates, and say clearly where bycatch or habitat loss matters more than waste.
-5. **Recycling targets.** Replace the "maximum realistic gain: 2.5 points per year" assumption with a sourced
-   benchmark, for example the fastest sustained national or regional recycling gains in EU or East Asian data.
+5. **Recycling targets.** Done for Europe: the register has `pace_*` entries (EU average 0.5 to 1.3 points a year,
+   fastest national gains about 2.4 to 2.7). Still open: East Asian or other non-European benchmarks, and a pace for
+   regions outside Europe. The 2.5 default is documented as a judgement in `gmax`.
 6. **Quality.** Add unit tests for `waste-model.ts` and `swarm-model.ts` (totals match 2.56 Bt in 2022 and 3.86 Bt
    in 2050; regional sums equal the global total; swarm output is reproducible for a fixed seed). Improve
    accessibility (keyboard-usable sliders, text alternatives for charts, colour contrast) and the mobile layout.

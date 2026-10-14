@@ -9,6 +9,12 @@ import { SectionHead } from "../ui/SectionHead";
 import { AnimatedNumber } from "../ui/AnimatedNumber";
 import type { Sim } from "../useSimulation";
 
+const PACE_PRESETS = [
+  { label: "EU 2014–24", value: 0.5, detail: "EU-27 average, 43.0% to 48.1%" },
+  { label: "EU 2004–14", value: 1.3, detail: "EU-28 average, 30% to 43% (older definition)" },
+  { label: "Poland, Slovenia", value: 2.5, detail: "Fastest sustained national gains found, about 2.4 to 2.7 points a year" },
+];
+
 export function Swarm({ sim }: { sim: Sim }) {
   const { bands, sched, targetYear } = sim;
   const last = bands[bands.length - 1];
@@ -52,7 +58,20 @@ export function Swarm({ sim }: { sim: Sim }) {
           <div className="mt-6 grid gap-6 sm:grid-cols-3">
             <ElasticSlider label="Target recycled share" value={sim.target} min={30} max={85} onChange={sim.setTarget} display={`${sim.target}%`} accent={C.gold} />
             <ElasticSlider label="Deadline" value={sim.targetYear} min={2030} max={2050} onChange={sim.setTargetYear} display={String(sim.targetYear)} accent={C.gold} />
-            <ElasticSlider label="Maximum realistic gain" value={sim.maxGain} min={0.5} max={5} step={0.5} onChange={sim.setMaxGain} display={`${sim.maxGain.toFixed(1)} pts / year`} accent={C.gold} hint="An assumption, not a sourced benchmark." />
+            <div>
+              <ElasticSlider label="Fastest realistic gain" value={sim.maxGain} min={0.5} max={5} step={0.1} onChange={sim.setMaxGain} display={`${sim.maxGain.toFixed(1)} pts / year`} accent={C.gold} />
+              <div className="mt-2 flex flex-wrap gap-1.5" role="group" aria-label="Recycling pace reference points">
+                {PACE_PRESETS.map((p) => (
+                  <button key={p.label} type="button" onClick={() => sim.setMaxGain(p.value)} aria-pressed={Math.abs(sim.maxGain - p.value) < 0.05} title={p.detail}
+                    className={`rounded-full border px-2.5 py-1 text-[11px] transition ${Math.abs(sim.maxGain - p.value) < 0.05 ? "border-gold/60 bg-gold/15 text-gold" : "border-line text-mute hover:text-ink"}`}>
+                    {p.label} {p.value}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs leading-relaxed text-dim">
+                Reference points from European data (see Sources). 2.5 is a judgement: it equals the fastest sustained national gains found, in countries that started from 3 to 5%. No source gives a pace for the whole world.
+              </p>
+            </div>
           </div>
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
             <div className="rounded-2xl border border-line bg-white/[0.03] p-4">
