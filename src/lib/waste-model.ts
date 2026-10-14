@@ -165,6 +165,10 @@ export const MATERIALS = [
   { id: "other", name: "Other & hazardous", share: 0.035, recoverability: 0.2, color: "#adb5bd", desc: "Household chemicals, batteries, mixed residual items" },
 ] as const;
 
+// The published composition percentages are rounded and add up to 99.9%, so shares are divided by their total
+// to make the materials add up exactly to the waste generated.
+const SHARE_TOTAL = MATERIALS.reduce((a, m) => a + m.share, 0);
+
 export type Scenario = {
   id: string;
   name: string;
@@ -248,6 +252,32 @@ function baselineGen(r: Region, year: number): number {
   }
 }
 
+// Shares the recovered tonnes between materials in proportion to their weights. A material can never recover
+// more than it generates; any overflow is passed to the materials that still have room, so nothing is lost.
+function allocateRecovery(gens: number[], weights: number[], total: number): number[] {
+  const out = gens.map(() => 0);
+  let remaining = Math.min(total, gens.reduce((a, b) => a + b, 0));
+  let open = gens.map((_, i) => i);
+  while (remaining > 1e-9 && open.length) {
+    const wSum = open.reduce((a, i) => a + weights[i], 0);
+    const capped: number[] = [];
+    for (const i of open) {
+      const give = (remaining * weights[i]) / wSum;
+      if (out[i] + give >= gens[i]) capped.push(i);
+    }
+    if (!capped.length) {
+      for (const i of open) out[i] += (remaining * weights[i]) / wSum;
+      return out;
+    }
+    for (const i of capped) {
+      remaining -= gens[i] - out[i];
+      out[i] = gens[i];
+    }
+    open = open.filter((i) => !capped.includes(i));
+  }
+  return out;
+}
+
 export function simulate({ growthCut, recoveryTarget }: Inputs): YearPoint[] {
   const out: YearPoint[] = [];
   const years = END_YEAR - START_YEAR;
@@ -307,13 +337,9 @@ export function simulate({ growthCut, recoveryTarget }: Inputs): YearPoint[] {
     }
 
     const weights = MATERIALS.map((m) => m.share * m.recoverability);
-    const wSum = weights.reduce((a, b) => a + b, 0);
-
-    const byMaterial = MATERIALS.map((m, i) => {
-      const g = generated * m.share;
-      const rec = Math.min(g, (recovered * weights[i]) / wSum);
-      return { id: m.id, generated: g, recovered: rec, residual: g - rec };
-    });
+    const gens = MATERIALS.map((m) => (generated * m.share) / SHARE_TOTAL);
+    const recs = allocateRecovery(gens, weights, recovered);
+    const byMaterial = MATERIALS.map((m, i) => ({ id: m.id, generated: gens[i], recovered: recs[i], residual: gens[i] - recs[i] }));
 
     // Methane & GHG calculation: 2022 baseline is 1.15 Gt CO2e methane from organic solid waste (Food + Garden)
     // Landfilled / unmanaged food + garden produces approx 0.85 t CO2e per tonne of decaying organics

@@ -1,8 +1,9 @@
 "use client";
 
+import { useId } from "react";
 import { END_YEAR, START_YEAR } from "@/lib/waste-model";
 import type { Band } from "@/lib/swarm-model";
-import { C } from "@/lib/format";
+import { C, pct } from "@/lib/format";
 
 const W = 760, H = 280, L = 48, R = 16, T = 16, B = 28;
 
@@ -15,8 +16,13 @@ export function BandChart({ bands, schedule }: { bands: Band[]; schedule: { year
   const med = bands.map((b, i) => `${i ? "L" : "M"}${f(x(b.year))},${f(y(b.p50))}`).join("");
   const req = schedule.map((r, i) => `${i ? "L" : "M"}${f(x(r.year))},${f(y(r.rate))}`).join("");
   const last = bands[bands.length - 1];
+  const titleId = useId();
+  const descId = useId();
+  const need = schedule[schedule.length - 1];
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full select-none" role="img" aria-label="Recycling share: simulated range and the path required to hit the target">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full select-none" role="img" aria-labelledby={`${titleId} ${descId}`}>
+      <title id={titleId}>Share of waste recycled: simulated range and the path the target needs</title>
+      <desc id={descId}>{`In ${last.year} the simulated median is ${pct(last.p50)}, with a 10th to 90th percentile range of ${pct(last.p10)} to ${pct(last.p90)}. The path needed to reach the target is ${pct(need.rate)} by ${need.year}.`}</desc>
       <defs>
         <linearGradient id="gBand" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor={C.leaf} stopOpacity="0.1" />

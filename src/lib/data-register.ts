@@ -302,8 +302,8 @@ export const REGISTER: Entry[] = [
     metric: "US municipal solid waste and recycling/composting rate",
     value: "292.4 million tons; 4.9 lb/capita/day; 32.1% recycled/composted",
     year: "2018",
-    status: "confirmed",
-    note: "US EPA Facts and Figures national overview (published Dec 2020 using 2018 data). Newest official national release from EPA. 50% landfilled, 11.8% combusted with energy recovery, 32.1% recycled/composted.",
+    status: "single",
+    note: "Only one source is listed (EPA itself), so this is not marked confirmed. US EPA Facts and Figures national overview (published Dec 2020 using 2018 data). Newest official national release from EPA. 50% landfilled, 11.8% combusted with energy recovery, 32.1% recycled/composted.",
     sources: [EPA_FACTS],
   },
 
@@ -338,6 +338,16 @@ export function statusCounts(): Record<Status, number> {
 }
 
 export const MODEL_ASSUMPTIONS: Entry[] = [
+  {
+    id: "cost_trajectory",
+    category: "Model assumptions",
+    metric: "Municipal operating cost shown in the Impact panel",
+    value: "Business-as-usual cost interpolated between US$250B (2022) and US$426B (2050), scaled by this scenario's waste relative to business as usual",
+    year: "2022 to 2050",
+    status: "derived",
+    note: "Assumes cost moves in proportion to tonnes handled. Real costs also depend on collection coverage and treatment mix, which this scaling ignores. Both endpoints come from the single-source cost_financing entry. Replaces an earlier unsourced US$45 per tonne figure.",
+    sources: [WB_REPORT],
+  },
   {
     id: "gmax",
     category: "Model assumptions",

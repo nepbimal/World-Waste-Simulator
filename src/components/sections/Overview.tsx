@@ -92,7 +92,7 @@ export function Overview({ sim }: { sim: Sim }) {
       <Reveal className="mt-4 grid gap-4 lg:grid-cols-5" delay={80}>
         <GlowCard className="p-5 sm:p-7 lg:col-span-3">
           <h3 className="text-lg font-semibold tracking-tight">Where {year}&apos;s waste goes</h3>
-          <div className="mt-5 flex h-9 w-full overflow-hidden rounded-xl bg-white/5">
+          <div aria-hidden="true" className="mt-5 flex h-9 w-full overflow-hidden rounded-xl bg-white/5">
             {streams.map((s) => (
               <div key={s.k} title={`${s.k}: ${fmt(s.v)} Mt`} className="h-full transition-[width] duration-700 ease-out first:rounded-l-xl last:rounded-r-xl" style={{ width: `${(s.v / g) * 100}%`, background: s.c }} />
             ))}
