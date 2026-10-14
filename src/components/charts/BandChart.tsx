@@ -7,14 +7,15 @@ import { C, pct } from "@/lib/format";
 
 const W = 760, H = 280, L = 48, R = 16, T = 16, B = 28;
 
-export function BandChart({ bands, schedule }: { bands: Band[]; schedule: { year: number; rate: number }[] }) {
-  const max = Math.max(0.65, ...bands.map((b) => b.p90), ...schedule.map((r) => r.rate)) * 1.05;
+export function BandChart({ bands, schedule, reference }: { bands: Band[]; schedule: { year: number; rate: number }[]; reference?: number[] }) {
+  const max = Math.max(0.7, ...bands.map((b) => b.p90), ...schedule.map((r) => r.rate)) * 1.05;
   const x = (yr: number) => L + ((yr - START_YEAR) / (END_YEAR - START_YEAR)) * (W - L - R);
   const y = (v: number) => T + (1 - v / max) * (H - T - B);
   const f = (n: number) => n.toFixed(1);
   const band = [...bands.map((b) => `${f(x(b.year))},${f(y(b.p90))}`), ...[...bands].reverse().map((b) => `${f(x(b.year))},${f(y(b.p10))}`)].join(" ");
   const med = bands.map((b, i) => `${i ? "L" : "M"}${f(x(b.year))},${f(y(b.p50))}`).join("");
   const req = schedule.map((r, i) => `${i ? "L" : "M"}${f(x(r.year))},${f(y(r.rate))}`).join("");
+  const ref = reference ? reference.map((v, i) => `${i ? "L" : "M"}${f(x(START_YEAR + i))},${f(y(v))}`).join("") : "";
   const last = bands[bands.length - 1];
   const titleId = useId();
   const descId = useId();
@@ -22,7 +23,7 @@ export function BandChart({ bands, schedule }: { bands: Band[]; schedule: { year
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full select-none" role="img" aria-labelledby={`${titleId} ${descId}`}>
       <title id={titleId}>Share of waste recycled: simulated range and the path the target needs</title>
-      <desc id={descId}>{`In ${last.year} the simulated median is ${pct(last.p50)}, with a 10th to 90th percentile range of ${pct(last.p10)} to ${pct(last.p90)}. The path needed to reach the target is ${pct(need.rate)} by ${need.year}.`}</desc>
+      <desc id={descId}>{`In ${last.year} the simulated median is ${pct(last.p50)}, with a 10th to 90th percentile range of ${pct(last.p10)} to ${pct(last.p90)}. The path needed to reach the target is ${pct(need.rate)} by ${need.year}.${reference ? ` The policy-only path without social effects ends at ${pct(reference[reference.length - 1])}.` : ""}`}</desc>
       <defs>
         <linearGradient id="gBand" x1="0" y1="0" x2="1" y2="0">
           <stop offset="0" stopColor={C.leaf} stopOpacity="0.1" />
@@ -39,6 +40,7 @@ export function BandChart({ bands, schedule }: { bands: Band[]; schedule: { year
         <text key={yr} x={x(yr)} y={H - 8} textAnchor="middle" fontSize="13" fill={C.mute} fontFamily="var(--font-inter), sans-serif">{yr}</text>
       ))}
       <polygon points={band} fill="url(#gBand)" className="fade-in" />
+      {ref && <path d={ref} fill="none" stroke={C.ink} strokeWidth="1.6" strokeDasharray="2 4" opacity="0.8" />}
       <path d={req} pathLength={1} className="draw" fill="none" stroke={C.gold} strokeWidth="2.4" strokeLinecap="round" />
       <path d={med} pathLength={1} className="draw" fill="none" stroke={C.leaf} strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" />
       <circle cx={x(last.year)} cy={y(last.p50)} r="5" fill={C.leaf} stroke="#06080b" strokeWidth="2" />

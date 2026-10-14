@@ -1,6 +1,7 @@
 "use client";
 
 import { SCENARIOS, START_YEAR } from "@/lib/waste-model";
+import { MAX_OBSERVED_RATE } from "@/lib/thresholds";
 import { C, fmt, pct } from "@/lib/format";
 import { TrajectoryChart } from "../charts/TrajectoryChart";
 import { AnimatedNumber } from "../ui/AnimatedNumber";
@@ -115,7 +116,7 @@ export function Overview({ sim }: { sim: Sim }) {
             <p className="mt-1 text-sm text-mute">Moving either slider switches to a custom scenario.</p>
           </div>
           <ElasticSlider label="Waste prevented by 2050" value={sim.growthCut} min={0} max={100} onChange={sim.setGrowth} display={`${sim.growthCut}% of growth`} hint="0% is business as usual (3.86 Bt). 100% holds waste at 2022 levels (2.56 Bt)." />
-          <ElasticSlider label="Global recovery target, 2050" value={sim.recoveryTarget} min={20} max={80} onChange={sim.setRecovery} display={`${sim.recoveryTarget}%`} accent={C.gold} hint="Today it is about 21%. The high-ambition scenario targets 54%." />
+          <ElasticSlider label="Global recovery target, 2050" value={sim.recoveryTarget} min={20} max={Math.round(MAX_OBSERVED_RATE * 100)} onChange={sim.setRecovery} display={`${sim.recoveryTarget}%`} accent={C.gold} hint="Today it is about 21%. The high-ambition scenario targets 54%. The slider stops at 69%, the highest national rate observed (Germany, 2023)." />
         </GlowCard>
       </Reveal>
     </section>

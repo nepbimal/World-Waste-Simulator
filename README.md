@@ -27,8 +27,19 @@ npm run dev
 
 ## Maths background
 
-The agent-based model re-implements the ideas behind MiroFish/OASIS-style simulations (stochastic agent activation,
-similarity-weighted neighbour influence, seeded Monte Carlo ensembles). MiroFish itself is AGPL-3.0 and is not used here.
+The agent-based "swarm" model re-implements the ideas behind MiroFish/OASIS-style simulations (random activation of agents,
+similarity-weighted neighbour influence, many seeded runs read as a distribution). MiroFish itself is AGPL-3.0 and is not used here.
+
+How it fits together: each region's household agents start at that region's recycling rate and receive the scenario's yearly
+policy push, so with no social effects the swarm follows the deterministic scenario path (tests check this). On top of that,
+neighbours influence each other (echo chambers change how far apart households end up, not the average) and neighbours
+above a social tipping point can amplify the push (the herd effect, off by default).
+
+Thresholds taken from data (see `src/lib/thresholds.ts` and the register): the ceiling on any region's recycling rate is the
+highest national rate observed (69%, Germany 2023); amplification switches on at the 25% tipping point from published group
+experiments; household spread comes from the 12% to 69% range of European national rates; and the width of the uncertainty band
+comes from the gap between two measured EU decades (0.5 and 1.3 points a year). The learning rate, number of neighbours and the
+herd strength have no data behind them; tests show the average outcome barely depends on the first two.
 
 ## Legal pages
 

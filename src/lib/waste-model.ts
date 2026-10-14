@@ -4,6 +4,8 @@
 // World Bank Group: "What a Waste 3.0: Global Snapshot of Solid Waste Management toward Circularity until 2050" (Cook et al., March 2026).
 // Every input is cataloged with its exact citation in data-register.ts.
 
+import { MAX_OBSERVED_RATE } from "./thresholds";
+
 export type Region = {
   id: string;
   name: string;
@@ -280,7 +282,8 @@ function allocateRecovery(gens: number[], weights: number[], total: number): num
 
 // Starting global recovery rate, computed from the regional 2022 figures so the maths is self-consistent.
 const BASE_RATE = REGIONS.reduce((a, r) => a + r.gen2022 * r.recovery2022, 0) / REGIONS.reduce((a, r) => a + r.gen2022, 0);
-const RATE_CAP = 0.95;
+// No region can recycle more than the best national rate observed (about 69%, see thresholds.ts)
+const RATE_CAP = MAX_OBSERVED_RATE;
 
 // Share of all waste that is dumped or never collected today (generation-weighted).
 const MISMANAGED_BASE =

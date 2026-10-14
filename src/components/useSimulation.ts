@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { END_YEAR, SCENARIOS, START_YEAR, simulate, type Scenario } from "@/lib/waste-model";
 import { requiredSchedule, runSwarm } from "@/lib/swarm-model";
+import { PACE_EU_EARLIER } from "@/lib/thresholds";
 
 // All simulation state and derived values live here; sections only render.
 export function useSimulation() {
@@ -12,10 +13,10 @@ export function useSimulation() {
   const [year, setYear] = useState<number>(2035);
   const [isPlaying, setIsPlaying] = useState(false);
   const [echo, setEcho] = useState(0.3);
-  const [herd, setHerd] = useState(0.5);
+  const [herd, setHerd] = useState(0); // off by default: no data fixes how strong amplification is
   const [target, setTarget] = useState(54);
   const [targetYear, setTargetYear] = useState(2050);
-  const [maxGain, setMaxGain] = useState(2.5);
+  const [maxGain, setMaxGain] = useState(PACE_EU_EARLIER);
 
   const pickScenario = (s: Scenario) => {
     setScenarioId(s.id);

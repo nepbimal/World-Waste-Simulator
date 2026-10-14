@@ -63,8 +63,8 @@ describe("waste model: recovery targets", () => {
     }
   });
 
-  it("also hits custom targets between the slider limits, as long as the 95% regional cap allows", () => {
-    for (const target of [20, 35, 60, 80]) {
+  it("also hits custom targets between the slider limits, up to the best national rate observed (69%)", () => {
+    for (const target of [20, 35, 60, 69]) {
       const last = simulate({ growthCut: 30, recoveryTarget: target }).at(-1)!;
       expect(last.recoveryRate, `target ${target}`).toBeCloseTo(target / 100, 3);
     }
@@ -79,13 +79,13 @@ describe("waste model: recovery targets", () => {
     }
   });
 
-  it("gives regions with more headroom a bigger catch-up, and respects the 95% cap", () => {
+  it("gives regions with more headroom a bigger catch-up, and respects the 69% cap", () => {
     const d = simulate({ growthCut: 0, recoveryTarget: 54 });
     const first = d[0].byRegion;
     const last = d.at(-1)!.byRegion;
     const gain = (id: string) => last.find((r) => r.id === id)!.recovery - first.find((r) => r.id === id)!.recovery;
     expect(gain("ssa")).toBeGreaterThan(gain("na"));
-    for (const y of d) for (const r of y.byRegion) expect(r.recovery).toBeLessThanOrEqual(0.95 + 1e-9);
+    for (const y of d) for (const r of y.byRegion) expect(r.recovery).toBeLessThanOrEqual(0.69 + 1e-9);
   });
 });
 
