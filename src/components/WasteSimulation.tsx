@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { END_YEAR, MATERIALS, REGIONS, SCENARIOS, SOURCES, START_YEAR, simulate } from "@/lib/waste-model";
-import { CLIMATE_FACTS, ENERGY_SAVINGS, ENERGY_SOURCE, SPECIES_CAVEATS, SPECIES_FACTS, WATER_FACTS } from "@/lib/planet-impact";
+import { END_YEAR, MATERIALS, REGIONS, SCENARIOS, START_YEAR, simulate } from "@/lib/waste-model";
+import { CHECKED_ON, MODEL_ASSUMPTIONS, REGISTER, STATUS_LABEL, statusCounts, type Entry, type Status } from "@/lib/data-register";
+import { SPECIES_CAVEATS } from "@/lib/planet-impact";
 import { NOW_YEAR, requiredSchedule, runSwarm, type Band } from "@/lib/swarm-model";
 
 const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
@@ -45,11 +46,39 @@ function BandChart({ bands, schedule }: { bands: Band[]; schedule: { year: numbe
       {[0, 0.2, 0.4, 0.6, 0.8].filter((t) => t <= max).map((t) => (
         <g key={t}><line x1={L} x2={W - R} y1={y(t)} y2={y(t)} stroke="#00000012" /><text x={L - 6} y={y(t) + 4} textAnchor="end" fontSize="10" fill="#6f6858">{Math.round(t * 100)}%</text></g>
       ))}
-      {[2016, 2026, 2035, 2050].map((yr) => <text key={yr} x={x(yr)} y={H - 8} textAnchor="middle" fontSize="10" fill="#6f6858">{yr}</text>)}
+      {[2022, 2026, 2035, 2050].map((yr) => <text key={yr} x={x(yr)} y={H - 8} textAnchor="middle" fontSize="10" fill="#6f6858">{yr}</text>)}
       <polygon points={area} fill="#3f6b52" opacity="0.2" />
       <polyline fill="none" stroke="#3f6b52" strokeWidth="2.5" points={bands.map((b) => `${f(x(b.year))},${f(y(b.p50))}`).join(" ")} />
       <polyline fill="none" stroke="#b8834a" strokeWidth="2.5" strokeDasharray="6 4" points={schedule.map((r) => `${f(x(r.year))},${f(y(r.rate))}`).join(" ")} />
     </svg>
+  );
+}
+
+const STATUS_STYLE: Record<Status, string> = {
+  confirmed: "border-[#3f6b52]/40 bg-[#3f6b52]/10 text-[#2f5440]",
+  single: "border-[#b8834a]/50 bg-[#b8834a]/10 text-[#7a5427]",
+  conflicting: "border-[#c0563f]/40 bg-[#c0563f]/10 text-[#8e3a28]",
+  derived: "border-[#5f8fa8]/50 bg-[#5f8fa8]/10 text-[#3d6579]",
+  estimate: "border-black/20 bg-black/[0.04] text-[#4a4540]",
+};
+
+function EntryRow({ e }: { e: Entry }) {
+  return (
+    <li className="rounded-lg bg-white/60 p-3 text-sm">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+        <span className="font-medium">{e.metric}</span>
+        <span className={`rounded-full border px-2 py-0.5 text-[11px] ${STATUS_STYLE[e.status]}`}>{STATUS_LABEL[e.status]}</span>
+      </div>
+      <div className="mt-1">{e.value} <span className="text-[#6f6858]">({e.year})</span></div>
+      {e.note && <p className="mt-1 text-xs text-[#6f6858]">{e.note}</p>}
+      {e.sources.length > 0 && (
+        <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
+          {e.sources.map((s) => (
+            <a key={s.url} href={s.url} target="_blank" rel="noreferrer" className="underline text-[#6f6858]">{s.label}{s.publisher ? " (publisher)" : ""}</a>
+          ))}
+        </p>
+      )}
+    </li>
   );
 }
 
@@ -77,6 +106,8 @@ export default function WasteSimulation() {
     [recoveryTarget, echo, herd, data],
   );
   const sched = useMemo(() => requiredSchedule(data, target / 100, targetYear, maxGain), [data, target, targetYear, maxGain]);
+  const counts = useMemo(() => statusCounts(), []);
+  const categories = useMemo(() => Array.from(new Set([...REGISTER, ...MODEL_ASSUMPTIONS].map((e) => e.category))), []);
   const cur = data[year - START_YEAR];
   const years = data.map((d) => d.year);
   const cumulativeResidual = data.slice(0, year - START_YEAR + 1).reduce((a, d) => a + d.residual, 0);
@@ -89,7 +120,7 @@ export default function WasteSimulation() {
       <h1 className="text-3xl font-semibold">Waste simulation to 2050</h1>
       <p className="mt-2 max-w-2xl text-[#6f6858]">
         How much municipal solid waste the world produces, how much is recycled or composted, and what is left to landfill,
-        dump or burn. Starts from World Bank data (2016) and projects each region forward under the scenario you choose.
+        dump or burn. Starts from the World Bank&apos;s 2022 data (published 2026) and projects each region forward under the scenario you choose.
       </p>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -239,52 +270,41 @@ export default function WasteSimulation() {
 
 
       <section className="mt-8 rounded-xl border border-black/10 bg-white/50 p-5">
-        <h2 className="font-medium">Wider impact: energy, climate, water, land and wildlife</h2>
-        <p className="mt-1 text-sm text-[#6f6858]">
-          The model tracks tonnes. These panels connect that to the rest of the planet, using the {year} numbers above and published figures. Published figures are context, not model outputs.
-        </p>
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg bg-white/60 p-4 text-sm">
-            <h3 className="font-medium">Land</h3>
-            <p className="mt-1 text-[#6f6858]">Disposed in {year}: <b className="text-[#201c17]">{fmt(cur.residual)} Mt</b> to landfill, dumps or burning. Cumulative since {START_YEAR}: <b className="text-[#201c17]">{(cumulativeResidual / 1000).toFixed(1)} Bt</b>.</p>
-          </div>
-          <div className="rounded-lg bg-white/60 p-4 text-sm">
-            <h3 className="font-medium">Climate (methane)</h3>
-            <p className="mt-1 text-[#6f6858]">Food and green waste not recovered in {year}: <b className="text-[#201c17]">{fmt(foodDisposed)} Mt</b>. Organic waste in landfills is the main methane source.</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-[#6f6858]">{CLIMATE_FACTS.map((f) => <li key={f.url}><a className="underline" href={f.url} target="_blank" rel="noreferrer">{f.text}</a></li>)}</ul>
-          </div>
-          <div className="rounded-lg bg-white/60 p-4 text-sm">
-            <h3 className="font-medium">Water</h3>
-            <p className="mt-1 text-[#6f6858]">Plastic not recovered in {year}: <b className="text-[#201c17]">{fmt(plasticDisposed)} Mt</b>. Only part of this reaches waterways; the share depends on collection quality.</p>
-            <ul className="mt-2 list-disc space-y-1 pl-5 text-[#6f6858]">{WATER_FACTS.map((f) => <li key={f.url}><a className="underline" href={f.url} target="_blank" rel="noreferrer">{f.text}</a></li>)}</ul>
-          </div>
-          <div className="rounded-lg bg-white/60 p-4 text-sm">
-            <h3 className="font-medium">Energy saved by recycling</h3>
-            <ul className="mt-1 space-y-1 text-[#6f6858]">{ENERGY_SAVINGS.map((e) => <li key={e.material}><b className="text-[#201c17]">{e.material}:</b> {e.saving}. {e.detail}</li>)}</ul>
-            <a className="mt-2 inline-block underline text-[#6f6858]" href={ENERGY_SOURCE.url} target="_blank" rel="noreferrer">{ENERGY_SOURCE.label}</a>
-          </div>
+        <h2 className="font-medium">What this means for land, climate and water ({year})</h2>
+        <p className="mt-1 text-sm text-[#6f6858]">Model outputs for the year you picked. The published figures behind each topic are listed with sources below.</p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg bg-white/60 p-4 text-sm"><h3 className="font-medium">Land</h3><p className="mt-1 text-[#6f6858]"><b className="text-[#201c17]">{fmt(cur.residual)} Mt</b> disposed this year; <b className="text-[#201c17]">{(cumulativeResidual / 1000).toFixed(1)} Bt</b> since {START_YEAR}.</p></div>
+          <div className="rounded-lg bg-white/60 p-4 text-sm"><h3 className="font-medium">Climate</h3><p className="mt-1 text-[#6f6858]"><b className="text-[#201c17]">{fmt(foodDisposed)} Mt</b> of food and green waste not recovered. Organic waste in landfills is the main methane source.</p></div>
+          <div className="rounded-lg bg-white/60 p-4 text-sm"><h3 className="font-medium">Water</h3><p className="mt-1 text-[#6f6858]"><b className="text-[#201c17]">{fmt(plasticDisposed)} Mt</b> of plastic not recovered. Only part reaches waterways, depending on collection quality.</p></div>
         </div>
         <div className="mt-4 rounded-lg bg-white/60 p-4 text-sm">
           <h3 className="font-medium">Wildlife: which species are most at risk?</h3>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-[#6f6858]">{SPECIES_FACTS.map((f) => <li key={f.url}><a className="underline" href={f.url} target="_blank" rel="noreferrer">{f.text}</a></li>)}</ul>
-          <p className="mt-3 font-medium">What this does not tell you</p>
-          <ul className="mt-1 list-disc space-y-1 pl-5 text-[#6f6858]">{SPECIES_CAVEATS.map((c) => <li key={c}>{c}</li>)}</ul>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-[#6f6858]">{SPECIES_CAVEATS.map((c) => <li key={c}>{c}</li>)}</ul>
         </div>
       </section>
 
-      <section className="mt-8 text-sm text-[#6f6858]">
-        <h2 className="font-medium text-[#201c17]">Data and assumptions</h2>
-        <ul className="mt-2 list-disc space-y-1 pl-5">
-          <li>2016 generation by region and 2050 business-as-usual totals (3.40 billion tonnes) are from the World Bank. UNEP&apos;s 2024 outlook projects 2.1 Bt (2023) rising to 3.8 Bt by 2050, so treat the baseline as conservative.</li>
-          <li>Global composition (food &amp; green 44%, paper 17%, plastic 12%, glass 5%, metal 4%, other) is World Bank data, applied equally to every region and year. Real mixes differ widely by income level.</li>
-          <li>Regional recovery rates are my approximations, calibrated to the World Bank global figure (~19% recycled or composted). Per-material recovery uses illustrative weights.</li>
-          <li>Regional values were cross-checked only through secondary sources; verify against the report appendices before citing.</li>
-          <li>This is a simple scenario model, not a forecast.</li>
-        </ul>
-        <div className="mt-3 flex flex-col gap-1">
-          {SOURCES.map((s) => <a key={s.url} href={s.url} className="underline" target="_blank" rel="noreferrer">{s.label}</a>)}
+      <section className="mt-8 rounded-xl border border-black/10 bg-white/50 p-5" id="sources">
+        <h2 className="font-medium">Data, sources and verification</h2>
+        <p className="mt-1 text-sm text-[#6f6858]">
+          Every external figure is listed with its year, sources and a status. Checked {CHECKED_ON}. I could not open the publishers&apos; own documents from where this was built, so
+          &quot;confirmed&quot; means several independent reports give the same number, not that the original table was read. Where sources disagree or I only found one, it says so.
+        </p>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          {(Object.keys(counts) as Status[]).filter((k) => k !== "estimate" || counts[k] > 0).map((k) => (
+            <span key={k} className={`rounded-full border px-2.5 py-1 ${STATUS_STYLE[k]}`}>{STATUS_LABEL[k]}: {counts[k]}</span>
+          ))}
         </div>
+        {categories.map((cat) => (
+          <div key={cat} className="mt-6">
+            <h3 className="text-sm font-semibold">{cat}</h3>
+            <ul className="mt-2 space-y-3">
+              {[...REGISTER, ...MODEL_ASSUMPTIONS].filter((e) => e.category === cat).map((e) => <EntryRow key={e.id} e={e} />)}
+            </ul>
+          </div>
+        ))}
       </section>
+
+      <p className="mt-6 text-xs text-[#6f6858]">This is a simple scenario model, not a forecast.</p>
     </main>
   );
 }

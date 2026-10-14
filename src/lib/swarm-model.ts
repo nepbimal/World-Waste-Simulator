@@ -38,7 +38,7 @@ export function runSwarm(inp: SwarmInputs, gen: YearPoint[]): Band[] {
     const rnd = mulberry32(inp.seed + run * 7919);
     const noise = () => (rnd() + rnd() + rnd() - 1.5) * 0.02; // ~N(0, 0.01^2)
     const regs = REGIONS.map((r) => {
-      const m0 = r.recovery2016 / CAP;
+      const m0 = r.recovery2022 / CAP;
       const p = new Float64Array(inp.agents);
       const a = new Float64Array(inp.agents);
       const w = new Float64Array(inp.agents);
@@ -47,7 +47,7 @@ export function runSwarm(inp: SwarmInputs, gen: YearPoint[]): Band[] {
         a[i] = 0.3 + 0.7 * rnd();
         w[i] = 1 + 4 * rnd() ** 3; // heavy-tailed influence
       }
-      const push = (inp.recoveryTarget / 100 / years / CAP) * (0.4 + 1 - r.recovery2016);
+      const push = (inp.recoveryTarget / 100 / years / CAP) * (0.4 + 1 - r.recovery2022);
       return { p, a, w, push };
     });
     for (let t = 0; t <= years; t++) {
