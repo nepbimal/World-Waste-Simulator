@@ -46,7 +46,7 @@ export const REGIONS: Region[] = [
     gen2022: 415,
     gen2030: 442,
     gen2040: 468,
-    gen2050: 518,
+    gen2050: 485, // What a Waste 3.0 Figure 2.7 & 4.1 (+17% growth from 415 Mt)
     recovery2022: 0.342, // 23% recycling (97 Mt) + 11% composting/AD (45 Mt) = 142 Mt
     incineration2022: 0.220, // 91 Mt
     landfillControlled2022: 0.358, // 149 Mt
@@ -110,7 +110,7 @@ export const REGIONS: Region[] = [
     gen2022: 231,
     gen2030: 291,
     gen2040: 391,
-    gen2050: 485, // 485-518 Mt (Table 4.1 / Fig 4.1b)
+    gen2050: 518, // What a Waste 3.0 Figure 2.7 & 4.1 (+124% growth from 231 Mt)
     recovery2022: 0.026, // 2% recycling (6 Mt) + <1% composting = ~6 Mt
     incineration2022: 0.001,
     landfillControlled2022: 0.048, // 11 Mt (5%)
