@@ -61,9 +61,10 @@ stronger policy, circular economy) plus custom sliders. It also shows:
    page, especially: global composition (food 38%, plastics 12.5%), the 21% recovery rate, the 29/21/20/30
    treatment split, UNEP's 2.1 vs 2.3 billion tonnes for 2023, wastewater 56% vs 58%, the IUCN Red List 2026
    counts, and the newest US EPA national figures (the current data is from 2018).
-3. **Missing categories.** E-waste, food, plastics, wastewater, textiles, methane and wildlife are sourced facts
-   only. Turn them into model-linked panels (for example e-waste and food-waste trajectories to 2030 and 2050)
-   using published projections, each with sources and a status.
+3. **Missing categories.** Done for food, e-waste, plastics, textiles and methane: `src/lib/streams.ts` links the
+   model streams to published benchmarks and the page has a live "Streams" section. Still open: water (wastewater)
+   and energy (savings from recycling) panels, and a model that can cut food waste specifically (today prevention cuts
+   every material equally).
 4. **Species.** Build a sourced "species at risk from waste and pollution" section from IUCN Red List data and
    peer-reviewed studies (marine animals and plastic, ghost gear, seabirds). Show the uncertainty, give no invented
    rankings or dates, and say clearly where bycatch or habitat loss matters more than waste.

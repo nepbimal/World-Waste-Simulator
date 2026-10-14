@@ -10,6 +10,7 @@ export const NAV = [
   { id: "overview", label: "Overview" },
   { id: "regions", label: "Regions" },
   { id: "materials", label: "Materials" },
+  { id: "streams", label: "Streams" },
   { id: "swarm", label: "Swarm" },
   { id: "impact", label: "Impact" },
   { id: "sources", label: "Sources" },

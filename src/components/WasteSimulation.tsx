@@ -7,6 +7,7 @@ import { Hero } from "./sections/Hero";
 import { Overview } from "./sections/Overview";
 import { Regions } from "./sections/Regions";
 import { Materials } from "./sections/Materials";
+import { Streams } from "./sections/Streams";
 import { Swarm } from "./sections/Swarm";
 import { Impact } from "./sections/Impact";
 import { Register } from "./sections/Register";
@@ -22,6 +23,7 @@ export default function WasteSimulation() {
         <Overview sim={sim} />
         <Regions sim={sim} />
         <Materials sim={sim} />
+        <Streams sim={sim} />
         <Swarm sim={sim} />
         <Impact sim={sim} />
         <Register />

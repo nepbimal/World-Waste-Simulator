@@ -282,6 +282,42 @@ function allocateRecovery(gens: number[], weights: number[], total: number): num
 const BASE_RATE = REGIONS.reduce((a, r) => a + r.gen2022 * r.recovery2022, 0) / REGIONS.reduce((a, r) => a + r.gen2022, 0);
 const RATE_CAP = 0.95;
 
+// Share of all waste that is dumped or never collected today (generation-weighted).
+const MISMANAGED_BASE =
+  REGIONS.reduce((a, r) => a + r.gen2022 * (r.dumpsite2022 + r.uncollected2022), 0) / REGIONS.reduce((a, r) => a + r.gen2022, 0);
+
+// Controlled-facilities target (share of waste not dumped or left uncollected) for any recovery target. The three
+// presets set it directly (80%, 89%, 100% in 2050); other recovery targets are interpolated between them in a
+// straight line, and extended past the ends along the nearest segment.
+export function controlledTargetFor(recoveryTarget: number): number {
+  const pts = SCENARIOS.map((s) => [s.recoveryTarget, s.controlledTarget] as const).sort((a, b) => a[0] - b[0]);
+  const seg = recoveryTarget <= pts[1][0] ? [pts[0], pts[1]] : [pts[pts.length - 2], pts[pts.length - 1]];
+  const [[x0, y0], [x1, y1]] = seg;
+  return Math.min(100, Math.max(0, y0 + ((recoveryTarget - x0) * (y1 - y0)) / (x1 - x0)));
+}
+
+const UNC_RATE = 0.9; // how fast uncollected waste shrinks per unit of formalisation
+const DUMP_RATE = 0.8; // how fast open dumping shrinks per unit of formalisation
+
+// Finds the single "formalisation" amount that makes the weighted share of dumped plus uncollected waste equal
+// `goal`. Higher formalisation always means less mismanaged waste, so it is found by bisection.
+function solveFormalisation(gens: number[], goal: number): number {
+  const total = gens.reduce((a, b) => a + b, 0);
+  const share = (g: number) =>
+    REGIONS.reduce(
+      (a, r, i) => a + gens[i] * (r.uncollected2022 * Math.max(0, 1 - UNC_RATE * g) + r.dumpsite2022 * Math.max(0, 1 - DUMP_RATE * g)),
+      0,
+    ) / total;
+  let lo = 0;
+  let hi = 1 / Math.min(UNC_RATE, DUMP_RATE) + 0.01;
+  for (let n = 0; n < 60; n++) {
+    const mid = (lo + hi) / 2;
+    if (share(mid) > goal) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
 // Finds each region's recovery rate so that the generation-weighted global rate equals `goal`.
 // Every region moves up by k times its uplift weight (regions with more headroom catch up faster) and no region
 // can exceed RATE_CAP. The weighted rate rises steadily with k, so k is found by bisection.
@@ -325,6 +361,11 @@ export function simulate({ growthCut, recoveryTarget }: Inputs): YearPoint[] {
       goal,
     );
 
+    // The mismanaged share also moves in a straight line, from today's share to what the scenario's
+    // controlled-facilities target leaves over in 2050 (BAU 80% controlled, so 20% mismanaged).
+    const mismanagedGoal = MISMANAGED_BASE + t * (1 - controlledTargetFor(recoveryTarget) / 100 - MISMANAGED_BASE);
+    const formalisation = solveFormalisation(regionGens, mismanagedGoal);
+
     for (const [i, r] of REGIONS.entries()) {
       const gen = regionGens[i];
       const rate = regionRates[i];
@@ -333,11 +374,12 @@ export function simulate({ growthCut, recoveryTarget }: Inputs): YearPoint[] {
       const regResidual = gen - regRecovered;
 
       // As collection and recovery expand, uncollected waste and dumpsites contract
-      const formalizationGain = Math.min(1, t * (recoveryTarget / 35));
-      const uncShare = Math.max(0, r.uncollected2022 * (1 - formalizationGain * 0.9));
-      const dumpShare = Math.max(0, r.dumpsite2022 * (1 - formalizationGain * 0.8));
-      const incShare = r.incineration2022;
-      const landShare = Math.max(0, 1 - rate - uncShare - dumpShare - incShare);
+      const uncShare = r.uncollected2022 * Math.max(0, 1 - UNC_RATE * formalisation);
+      const dumpShare = r.dumpsite2022 * Math.max(0, 1 - DUMP_RATE * formalisation);
+      // Material that is recycled is not also burned, so incineration gives way if the shares would exceed 100%
+      const room = Math.max(0, 1 - rate - uncShare - dumpShare);
+      const incShare = Math.min(r.incineration2022, room);
+      const landShare = room - incShare;
 
       generated += gen;
       recovered += regRecovered;

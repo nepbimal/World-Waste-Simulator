@@ -7,6 +7,7 @@ import {
   MATERIALS,
   REGIONS,
   SCENARIOS,
+  controlledTargetFor,
   START_YEAR,
   simulate,
 } from "../waste-model";
@@ -85,6 +86,41 @@ describe("waste model: recovery targets", () => {
     const gain = (id: string) => last.find((r) => r.id === id)!.recovery - first.find((r) => r.id === id)!.recovery;
     expect(gain("ssa")).toBeGreaterThan(gain("na"));
     for (const y of d) for (const r of y.byRegion) expect(r.recovery).toBeLessThanOrEqual(0.95 + 1e-9);
+  });
+});
+
+describe("waste model: mismanaged waste", () => {
+  const mis = (y: ReturnType<typeof simulate>[number]) => (y.dumpsite + y.uncollected) / y.generated;
+
+  it("starts at about 30% of all waste", () => {
+    expect(mis(simulate(BAU)[0])).toBeCloseTo(0.3, 2);
+  });
+
+  it("ends 2050 at what each preset's controlled-facilities target leaves over", () => {
+    for (const sc of SCENARIOS) {
+      const last = simulate({ growthCut: sc.growthCut, recoveryTarget: sc.recoveryTarget }).at(-1)!;
+      expect(mis(last), sc.name).toBeCloseTo(1 - sc.controlledTarget / 100, 2);
+    }
+  });
+
+  it("interpolates the controlled target between presets", () => {
+    expect(controlledTargetFor(27)).toBeCloseTo(80, 6);
+    expect(controlledTargetFor(54)).toBeCloseTo(100, 6);
+    expect(controlledTargetFor(41)).toBeCloseTo(89, 6);
+    expect(controlledTargetFor(34)).toBeGreaterThan(80);
+    expect(controlledTargetFor(34)).toBeLessThan(89);
+    expect(controlledTargetFor(90)).toBe(100);
+  });
+
+  it("keeps every treatment stream adding up to the waste generated, across a grid of settings", () => {
+    for (const growthCut of [0, 25, 50, 100]) {
+      for (const recoveryTarget of [20, 27, 41, 54, 70, 80]) {
+        for (const y of simulate({ growthCut, recoveryTarget })) {
+          const total = y.recovered + y.incinerated + y.controlledLandfill + y.dumpsite + y.uncollected;
+          expect(total, `${growthCut}/${recoveryTarget}/${y.year}`).toBeCloseTo(y.generated, 4);
+        }
+      }
+    }
   });
 });
 

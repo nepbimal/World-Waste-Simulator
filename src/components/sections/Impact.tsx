@@ -1,6 +1,7 @@
 "use client";
 
 import { operationalCostBn } from "@/lib/costs";
+import { mismanagedPlasticMt, mismanagedShare } from "@/lib/streams";
 import { fmt } from "@/lib/format";
 import { SPECIES_CAVEATS } from "@/lib/planet-impact";
 import { AnimatedNumber } from "../ui/AnimatedNumber";
@@ -11,10 +12,9 @@ import type { Sim } from "../useSimulation";
 
 export function Impact({ sim }: { sim: Sim }) {
   const { cur, year, bauCur } = sim;
-  const plastic = cur.byMaterial.find((m) => m.id === "plastic")!;
   const cards = [
     { eyebrow: "Climate", tone: "text-ink", value: cur.co2eMethane, f: (n: number) => `${fmt(n)} Mt CO₂e`, body: "A year of greenhouse gas from food and garden waste rotting in dumps and landfills.", foot: "Composting and anaerobic digestion can prevent up to 90% of landfill methane.", footTone: "border-leaf/25 bg-leaf/[0.07] text-leaf" },
-    { eyebrow: "Water and land", tone: "text-ember", value: plastic.residual * 0.288, f: (n: number) => `${fmt(n)} Mt`, body: `Plastic that is dumped or never collected in ${year}. Applies the registered 28.8% mismanaged share to plastic that is not recovered (a simplification).`, foot: "About 65% of municipal plastic is single-use packaging.", footTone: "border-ember/25 bg-ember/[0.07] text-ember" },
+    { eyebrow: "Water and land", tone: "text-ember", value: mismanagedPlasticMt(cur), f: (n: number) => `${fmt(n)} Mt`, body: `Plastic that is dumped or never collected in ${year}: plastic generated times the ${(mismanagedShare(cur) * 100).toFixed(0)}% of all waste this scenario leaves mismanaged.`, foot: "About 65% of municipal plastic is single-use packaging.", footTone: "border-ember/25 bg-ember/[0.07] text-ember" },
     { eyebrow: "Cost of managing it", tone: "text-ink", value: operationalCostBn(year, cur.generated, bauCur.generated), f: (n: number) => `$${fmt(n)} billion`, body: `Direct municipal cost in ${year}: the World Bank's US$250B (2022) to US$426B (2050) business-as-usual path, scaled to this scenario's waste. A derived estimate; see the register.`, foot: "The register lists about 18 million urban waste workers worldwide.", footTone: "border-white/10 bg-white/[0.04] text-mute" },
   ];
   return (
