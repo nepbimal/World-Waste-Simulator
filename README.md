@@ -14,3 +14,13 @@ rates and per-material weights are approximations, not published figures. This i
 npm install
 npm run dev
 ```
+
+## Open it without a terminal
+
+- **Vercel (easiest, free):** go to vercel.com, sign in with GitHub, click Add New > Project, pick this repo, click Deploy. You get a public link in about a minute.
+- **GitHub Codespaces:** on the repo page click Code > Codespaces > Create. In the browser terminal that opens, run `npm install` then `npm run dev` and open the forwarded port 3000.
+
+## Maths background
+
+The agent-based model re-implements the ideas behind MiroFish/OASIS-style simulations (stochastic agent activation,
+similarity-weighted neighbour influence, seeded Monte Carlo ensembles). MiroFish itself is AGPL-3.0 and is not used here.

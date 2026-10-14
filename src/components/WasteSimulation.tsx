@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { END_YEAR, MATERIALS, REGIONS, SCENARIOS, SOURCES, START_YEAR, simulate } from "@/lib/waste-model";
+import { CLIMATE_FACTS, ENERGY_SAVINGS, ENERGY_SOURCE, SPECIES_CAVEATS, SPECIES_FACTS, WATER_FACTS } from "@/lib/planet-impact";
 import { NOW_YEAR, requiredSchedule, runSwarm, type Band } from "@/lib/swarm-model";
 
 const fmt = (n: number) => Math.round(n).toLocaleString("en-US");
@@ -79,6 +80,8 @@ export default function WasteSimulation() {
   const cur = data[year - START_YEAR];
   const years = data.map((d) => d.year);
   const cumulativeResidual = data.slice(0, year - START_YEAR + 1).reduce((a, d) => a + d.residual, 0);
+  const foodDisposed = cur.byMaterial.filter((m) => m.id === "food").reduce((a, m) => a + m.generated - m.recovered, 0);
+  const plasticDisposed = cur.byMaterial.filter((m) => m.id === "plastic").reduce((a, m) => a + m.generated - m.recovered, 0);
   const avoided = bau[year - START_YEAR].residual - cur.residual;
 
   return (
@@ -233,6 +236,41 @@ export default function WasteSimulation() {
           </table>
         </section>
       </div>
+
+
+      <section className="mt-8 rounded-xl border border-black/10 bg-white/50 p-5">
+        <h2 className="font-medium">Wider impact: energy, climate, water, land and wildlife</h2>
+        <p className="mt-1 text-sm text-[#6f6858]">
+          The model tracks tonnes. These panels connect that to the rest of the planet, using the {year} numbers above and published figures. Published figures are context, not model outputs.
+        </p>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="rounded-lg bg-white/60 p-4 text-sm">
+            <h3 className="font-medium">Land</h3>
+            <p className="mt-1 text-[#6f6858]">Disposed in {year}: <b className="text-[#201c17]">{fmt(cur.residual)} Mt</b> to landfill, dumps or burning. Cumulative since {START_YEAR}: <b className="text-[#201c17]">{(cumulativeResidual / 1000).toFixed(1)} Bt</b>.</p>
+          </div>
+          <div className="rounded-lg bg-white/60 p-4 text-sm">
+            <h3 className="font-medium">Climate (methane)</h3>
+            <p className="mt-1 text-[#6f6858]">Food and green waste not recovered in {year}: <b className="text-[#201c17]">{fmt(foodDisposed)} Mt</b>. Organic waste in landfills is the main methane source.</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-[#6f6858]">{CLIMATE_FACTS.map((f) => <li key={f.url}><a className="underline" href={f.url} target="_blank" rel="noreferrer">{f.text}</a></li>)}</ul>
+          </div>
+          <div className="rounded-lg bg-white/60 p-4 text-sm">
+            <h3 className="font-medium">Water</h3>
+            <p className="mt-1 text-[#6f6858]">Plastic not recovered in {year}: <b className="text-[#201c17]">{fmt(plasticDisposed)} Mt</b>. Only part of this reaches waterways; the share depends on collection quality.</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5 text-[#6f6858]">{WATER_FACTS.map((f) => <li key={f.url}><a className="underline" href={f.url} target="_blank" rel="noreferrer">{f.text}</a></li>)}</ul>
+          </div>
+          <div className="rounded-lg bg-white/60 p-4 text-sm">
+            <h3 className="font-medium">Energy saved by recycling</h3>
+            <ul className="mt-1 space-y-1 text-[#6f6858]">{ENERGY_SAVINGS.map((e) => <li key={e.material}><b className="text-[#201c17]">{e.material}:</b> {e.saving}. {e.detail}</li>)}</ul>
+            <a className="mt-2 inline-block underline text-[#6f6858]" href={ENERGY_SOURCE.url} target="_blank" rel="noreferrer">{ENERGY_SOURCE.label}</a>
+          </div>
+        </div>
+        <div className="mt-4 rounded-lg bg-white/60 p-4 text-sm">
+          <h3 className="font-medium">Wildlife: which species are most at risk?</h3>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-[#6f6858]">{SPECIES_FACTS.map((f) => <li key={f.url}><a className="underline" href={f.url} target="_blank" rel="noreferrer">{f.text}</a></li>)}</ul>
+          <p className="mt-3 font-medium">What this does not tell you</p>
+          <ul className="mt-1 list-disc space-y-1 pl-5 text-[#6f6858]">{SPECIES_CAVEATS.map((c) => <li key={c}>{c}</li>)}</ul>
+        </div>
+      </section>
 
       <section className="mt-8 text-sm text-[#6f6858]">
         <h2 className="font-medium text-[#201c17]">Data and assumptions</h2>
