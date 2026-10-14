@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { END_YEAR, SCENARIOS, START_YEAR } from "@/lib/waste-model";
 import { AnimatedNumber } from "../ui/AnimatedNumber";
@@ -100,11 +101,18 @@ export function Dock({ sim }: { sim: Sim }) {
 export function Footer() {
   return (
     <footer className="mt-24 flex flex-wrap items-center justify-between gap-3 border-t border-line py-8 text-xs text-dim">
-      <div>World Waste Simulator. A scenario model, not a forecast.</div>
       <div>
-        Data: World Bank Group, <em>What a Waste 3.0</em> (2026), plus the sources listed in the register.{" "}
-        <a className="underline hover:text-ink" href="#sources">See every figure</a>
+        <div>World Waste Simulator. A scenario model, not a forecast.</div>
+        <div className="mt-1">
+          Data: World Bank Group, <em>What a Waste 3.0</em> (2026), plus the sources listed in the register.{" "}
+          <a className="underline hover:text-ink" href="#sources">See every figure</a>
+        </div>
       </div>
+      <nav aria-label="Legal" className="flex flex-wrap gap-x-5 gap-y-1">
+        <Link className="underline-offset-4 hover:text-ink hover:underline" href="/impressum">Impressum</Link>
+        <Link className="underline-offset-4 hover:text-ink hover:underline" href="/privacy">Privacy</Link>
+        <Link className="underline-offset-4 hover:text-ink hover:underline" href="/terms">Terms and disclaimer</Link>
+      </nav>
     </footer>
   );
 }
