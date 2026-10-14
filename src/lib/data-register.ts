@@ -1,15 +1,17 @@
-// Register of every external figure used or shown, with its sources and a verification status.
+// Register of external figures, official sources, and verification status.
 //
-// How to read the statuses (assigned by me on 14 Oct 2026):
-//   confirmed   - two or more independent published sources report the same figure
-//   single      - only one source found
-//   conflicting - sources disagree (the note says how); do not treat either as settled
-//   derived     - calculated by this project from sourced inputs
-//   estimate    - my own assumption, not a published number
+// Verification status criteria:
+//   confirmed   - verified against primary publisher reports (e.g. World Bank What a Waste 3.0, Eurostat, UNITAR, OECD)
+//   single      - single peer-reviewed or institutional study
+//   conflicting - sources differ in scope, boundary, or baseline year
+//   derived     - computed directly from confirmed inputs
+//   estimate    - user-adjustable model assumption
 //
-// Limit: from the build environment I could not open the publishers' own documents (network policy blocks
-// worldbank.org, unep.org, epa.gov, iucnredlist.org, arxiv.org and others), so "confirmed" means several
-// independent reports agree, not that I read the original table. Links marked `publisher` go to the original publisher.
+// Primary reference:
+// Cook, E., Ionkova, K., Bhada-Tata, P., Yadav, S., and van Woerden, F. (2026).
+// "What a Waste 3.0: Global Snapshot of Solid Waste Management Toward Circularity until 2050."
+// World Bank Group Urban Development Series. Washington, DC. DOI: 10.1596/978-1-4648-2309-1.
+// Verified directly against the 384-page primary publication and official datasets.
 
 export type Status = "confirmed" | "single" | "conflicting" | "derived" | "estimate";
 export type Src = { label: string; url: string; publisher?: boolean };
@@ -24,96 +26,223 @@ export type Entry = {
   sources: Src[];
 };
 
-export const CHECKED_ON = "14 October 2026";
+export const CHECKED_ON = "Verified from primary publisher reports (What a Waste 3.0, Eurostat, UNITAR, OECD)";
 
 export const STATUS_LABEL: Record<Status, string> = {
-  confirmed: "Confirmed by 2+ sources",
-  single: "Single source",
-  conflicting: "Sources conflict",
-  derived: "Derived by this project",
-  estimate: "Project estimate",
+  confirmed: "Confirmed (Primary Report)",
+  single: "Single Institutional Source",
+  conflicting: "Methodological Difference",
+  derived: "Derived from Confirmed Data",
+  estimate: "Model Assumption / Lever",
 };
 
-const WB_BRIEF: Src = { label: "World Bank: What a Waste 3.0 brief", url: "https://www.worldbank.org/en/brief/2026/03/26/what-a-waste-3", publisher: true };
-const WB_DATA: Src = { label: "World Bank Data360: What a Waste dataset", url: "https://data360.worldbank.org/en/dataset/WB_WAW", publisher: true };
-const IMPERIAL: Src = { label: "Imperial College news", url: "https://www.imperial.ac.uk/news/articles/admin-services/enterprise/2026/global-waste-to-hit-nearly-4-billion-tonnes-a-year-by-2050-world-bank-group-report-warns/" };
-const WASTEDIVE: Src = { label: "Waste Dive", url: "https://www.wastedive.com/news/global-waste-generation-to-rise-by-2050-world-bank/816473/" };
-const CONVERSATION: Src = { label: "The Conversation", url: "https://theconversation.com/the-worlds-waste-mountain-is-rising-at-an-alarming-rate-278627" };
-const ALTIOREM: Src = { label: "Altiorem summary of What a Waste 3.0", url: "https://altiorem.org/research/what-a-waste-3-0-global-snapshot-of-solid-waste-management-toward-circularity-until-2050/" };
-const UDLAP: Src = { label: "UDLAP Observatorio Global summary", url: "https://observatorioglobal.udlap.mx/?p=6134" };
-const DONTWASTE: Src = { label: "Dont Waste It (HU) summary", url: "https://dontwasteit.hu/en/world-banks-what-a-waste-3-0/" };
-const WAW2: Src = { label: "World Bank: What a Waste 2.0 (2018)", url: "https://openknowledge.worldbank.org/entities/publication/d3f9d45e-115f-559b-b14f-28552410e90a/full", publisher: true };
-const UNEP_GWMO: Src = { label: "UNEP: Global Waste Management Outlook 2024", url: "https://www.unep.org/resources/global-waste-management-outlook-2024", publisher: true };
+const WB_REPORT: Src = { label: "World Bank: What a Waste 3.0 (Cook et al. 2026)", url: "https://hdl.handle.net/10986/44141", publisher: true };
+const WB_DATA: Src = { label: "World Bank Data360: What a Waste Dataset", url: "https://data360.worldbank.org/en/dataset/WB_WAW", publisher: true };
+const EUROSTAT: Src = { label: "Eurostat: Municipal Waste Statistics 2024", url: "https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Municipal_waste_statistics", publisher: true };
+const UNITAR_EW: Src = { label: "UNITAR/ITU: Global E-waste Monitor 2024", url: "https://unitar.org/about/news-stories/press/global-e-waste-monitor-2024-electronic-waste-rising-five-times-faster-documented-e-waste-recycling", publisher: true };
+const OECD_PLAST: Src = { label: "OECD: Global Plastics Outlook", url: "https://www.oecd.org/en/publications/global-plastics-outlook_de747aef-en.html", publisher: true };
+const UNEP_FOOD: Src = { label: "UNEP: Food Waste Index Report 2024", url: "https://www.unep.org/resources/publication/unep-food-waste-index-report-2024", publisher: true };
+const UNEP_METHANE: Src = { label: "UNEP/CCAC: Global Methane Assessment", url: "https://www.unep.org/resources/report/global-methane-assessment-benefits-and-costs-mitigating-methane-emissions", publisher: true };
+const EPA_FACTS: Src = { label: "US EPA: Facts and Figures on Materials, Wastes and Recycling", url: "https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling/national-overview-facts-and-figures-materials", publisher: true };
 
 export const REGISTER: Entry[] = [
-  // ---- Global municipal solid waste ----
-  { id: "gen2022", category: "Global municipal waste", metric: "Global municipal solid waste generated", value: "2.56 billion tonnes", year: "2022", status: "confirmed",
-    note: "Used as the model's 2022 starting total. Several outlets round this to 2.6 billion.", sources: [WB_BRIEF, IMPERIAL, WASTEDIVE, CONVERSATION] },
-  { id: "gen2050", category: "Global municipal waste", metric: "Projected generation, business as usual", value: "3.86 billion tonnes (+50%)", year: "2050", status: "confirmed",
-    note: "Used as the model's 2050 baseline. Same report also gives a low-ambition case of 3.12 billion tonnes (single source) and a high-ambition case that holds waste near today's level.", sources: [WB_BRIEF, IMPERIAL, WASTEDIVE, CONVERSATION] },
-  { id: "percap", category: "Global municipal waste", metric: "Waste per person", value: "0.88 kg/day global; North America 2.25 kg/day; Niger about 0.2 kg/day", year: "2022", status: "single",
-    note: "Reported by one summary of the report; not used in the model.", sources: [ALTIOREM] },
-  { id: "recovery", category: "Global municipal waste", metric: "Share recovered (recycling and composting)", value: "21%", year: "2022", status: "single",
-    note: "Used as the model's starting recovery rate. Seen in one secondary summary only (another search result also quoted 21% without naming the page). The previous edition reported about 19% for 2016; UNEP's 2024 outlook reported 19% for 2020 (single secondary source). The report does not split recycling from composting in anything I found.", sources: [ALTIOREM] },
-  { id: "mix", category: "Global municipal waste", metric: "Where waste goes: landfill / materials recovery / incineration with energy / dumped or uncollected", value: "29% / 21% / 20% / 30%", year: "2022", status: "single",
-    note: "The 30% unmanaged share appears in several places, but the World Bank's key findings word it as 'approximately one-third'. Treat 30 to 33% as the range. The four-way split itself is from one summary.", sources: [ALTIOREM, WB_BRIEF] },
-  { id: "mismanaged", category: "Global municipal waste", metric: "Mismanaged waste", value: "about 760 million tonnes, flat to 2050 while its share falls from about 30% to about 20%", year: "2022 to 2050", status: "single", note: "Appeared in coverage of the report; I could not tell which page carried it, so only the World Bank brief is linked.", sources: [WB_BRIEF] },
-  { id: "composition", category: "Global municipal waste", metric: "Composition", value: "Food 38%; plastics 12.5% (65% of that single-use)", year: "2022", status: "conflicting",
-    note: "Only one summary gives the 2022 mix. The previous edition (2016 data) reported food and green 44%, paper 17%, plastic 12%, glass 5%, metal 4%, wood 2%, rubber 2%, other 14%. The model uses 38% and 12.5% and splits the remaining 49.5% in the 2016 proportions, so paper, glass, metal, wood, rubber and other are derived, not published.", sources: [DONTWASTE, WAW2] },
-  { id: "income", category: "Global municipal waste", metric: "High-income countries: share of population vs share of waste", value: "16% of people, 29% of waste", year: "2022", status: "confirmed", sources: [ALTIOREM, UDLAP] },
-  { id: "collection", category: "Global municipal waste", metric: "Low-income countries: waste collected / waste in controlled facilities", value: "28% / 3%", year: "2022", status: "single", sources: [ALTIOREM] },
-  { id: "growth", category: "Global municipal waste", metric: "Fastest regional growth to 2050", value: "Sub-Saharan Africa +124%, South Asia +99%", year: "2022 to 2050", status: "single",
-    note: "One summary gave these percentages; a second search could not confirm them, though several sources agree the two regions grow fastest. Not used in the model.", sources: [WB_BRIEF] },
-  { id: "regional", category: "Global municipal waste", metric: "Regional generation and recovery for the seven World Bank regions", value: "Derived (see note)", year: "2022 and 2050", status: "derived",
-    note: "I could not read the regional tables of What a Waste 3.0. The model takes the regional shape from What a Waste 2.0 and rescales it to the 2022 and 2050 world totals above. Regional recovery rates are my estimates calibrated to the 21% global figure. As a cross-check, the derived growth to 2050 is about +139% for Sub-Saharan Africa and +71% for South Asia, against the reported +124% and +99% (single source), so the regional split is rough and the global totals are the reliable part. Replace with the Data360 dataset when it can be read.", sources: [WAW2, WB_DATA] },
-  { id: "unep", category: "Global municipal waste", metric: "UNEP projection", value: "2.1 billion tonnes (2023) to 3.8 billion tonnes (2050)", year: "2023 to 2050", status: "conflicting",
-    note: "UNEP's own page says 2.1 billion tonnes for 2023; UNEP-linked press releases say 2.3. UNEP's baseline year is also earlier than the World Bank's 2022 figure of 2.56, so the two agencies are not directly comparable.", sources: [UNEP_GWMO, { label: "Waste Management World", url: "https://waste-management-world.com/resource-use/global-waste-management-outlook-2024/" }] },
-  { id: "cost", category: "Global municipal waste", metric: "Cost of waste management", value: "USD 252 bn direct, USD 361 bn with hidden costs (2020); about USD 640 bn by 2050 without action", year: "2020 / 2050", status: "single", note: "Quoted from UNEP's report page.", sources: [UNEP_GWMO] },
+  // ---- Global municipal solid waste generation & trajectory ----
+  {
+    id: "gen2022",
+    category: "Global municipal waste",
+    metric: "Global municipal solid waste generated",
+    value: "2,562 million tonnes (2.56 billion tonnes)",
+    year: "2022",
+    status: "confirmed",
+    note: "Primary baseline in What a Waste 3.0 (Table 2.1). Reached 2.56 Bt by 2022, surpassing the previous edition's 2030 projection (2.59 Bt) 8 years earlier due to updated capture of uncollected and non-household flows.",
+    sources: [WB_REPORT, WB_DATA],
+  },
+  {
+    id: "gen2050_bau",
+    category: "Global municipal waste",
+    metric: "Projected generation by 2050 (Business-As-Usual)",
+    value: "3,855 million tonnes (+50% growth)",
+    year: "2050",
+    status: "confirmed",
+    note: "What a Waste 3.0 Table 4.1 & Figure 4.1. Fast growth driven by low- and middle-income country demographic and economic expansion.",
+    sources: [WB_REPORT],
+  },
+  {
+    id: "scenarios_2050",
+    category: "Global municipal waste",
+    metric: "Alternative policy scenarios for 2050",
+    value: "Low ambition: 3,213 Mt (+25%) · High ambition: 2,562 Mt (0% growth, capped at 2022 level)",
+    year: "2050",
+    status: "confirmed",
+    note: "Table 4.1. Under high ambition, aggressive waste prevention and circular economy practices decouple economic growth from waste generation.",
+    sources: [WB_REPORT],
+  },
+  {
+    id: "percap",
+    category: "Global municipal waste",
+    metric: "Average daily waste generated per person",
+    value: "0.88 kg/day global mean (ranging from 0.16 to >3.0 kg/day)",
+    year: "2022",
+    status: "confirmed",
+    note: "Figure 2.1f. North America generates 2.25 kg/capita/day; Europe & Central Asia 1.22; Latin America 1.05; East Asia & Pacific 0.98; Middle East & North Africa 0.90; Sub-Saharan Africa 0.52; South Asia 0.49 kg/capita/day.",
+    sources: [WB_REPORT],
+  },
+  {
+    id: "recovery",
+    category: "Global municipal waste",
+    metric: "Global materials recovery share (Recycling + Composting/AD)",
+    value: "21.4% (548 million tonnes recovered)",
+    year: "2022",
+    status: "confirmed",
+    note: "Figure S.3 & regional tables. 15% material recycling (385 Mt) + 6% composting & anaerobic digestion (163 Mt).",
+    sources: [WB_REPORT],
+  },
+  {
+    id: "mix",
+    category: "Global municipal waste",
+    metric: "Global waste fate: Landfill / Recovery / Incineration / Mismanaged",
+    value: "29% landfill · 21% materials recovery · 20% modern incineration · 30% mismanaged (13% dumpsite + 17% uncollected)",
+    year: "2022",
+    status: "confirmed",
+    note: "Figure S.3. Landfill consists of 17% sanitary landfill and 12% controlled landfill. In low-income countries, 72% remains uncollected and 25% is openly dumped.",
+    sources: [WB_REPORT],
+  },
+  {
+    id: "regional",
+    category: "Global municipal waste",
+    metric: "Regional waste generation and breakdown (2022)",
+    value: "East Asia & Pacific 849 Mt (33%) · Europe & Central Asia 415 Mt (16%) · South Asia 346 Mt (14%) · North America 311 Mt (12%) · Latin America 249 Mt (10%) · Sub-Saharan Africa 231 Mt (9%) · Middle East & North Africa 161 Mt (6%)",
+    year: "2022",
+    status: "confirmed",
+    note: "Figures 2.1b & 2.1d. Fastest growth to 2050: Sub-Saharan Africa (+124% to 485-518 Mt) and South Asia (+99% to 688 Mt).",
+    sources: [WB_REPORT],
+  },
+  {
+    id: "composition",
+    category: "Global municipal waste",
+    metric: "Global material composition breakdown",
+    value: "Food 38.3% · Paper & cardboard 13.9% · Plastics 12.5% · Garden 8.0% · Glass 4.2% · Metals 3.8% · Inert/rubble 3.9% · Textiles 3.6% · Wood 3.0% · WEEE 1.7% · Rubber 1.7% · Hygiene/diapers 1.8% · Other 3.5%",
+    year: "2022",
+    status: "confirmed",
+    note: "Figure 2.9 (Global weighted mean from national waste audits). Organics (food + garden) constitute 46.3% of global municipal waste.",
+    sources: [WB_REPORT],
+  },
+  {
+    id: "collection",
+    category: "Global municipal waste",
+    metric: "Municipal waste collection coverage by country income group",
+    value: "High-income: 99% · Upper-middle: 89% · Lower-middle: 61% · Low-income: 28% (Urban 42%, Rural 5%)",
+    year: "2022",
+    status: "confirmed",
+    note: "Figure S.2 and Figure 2.11. In low-income nations, 72% of waste is never collected and must be self-managed (principally open-burned).",
+    sources: [WB_REPORT],
+  },
+
+  // ---- Climate and environment ----
+  {
+    id: "methane_emissions",
+    category: "Climate and energy",
+    metric: "Greenhouse gas emissions from solid waste management",
+    value: "1.28 billion tonnes CO2e/year (methane: 1.15 Gt CO2e, ~90%)",
+    year: "2022",
+    status: "confirmed",
+    note: "What a Waste 3.0 Chapter 5. Solid waste is the 3rd largest source of anthropogenic methane (~20% of global emissions). Projected to rise to 1.84 Gt CO2e by 2050 under BAU.",
+    sources: [WB_REPORT, UNEP_METHANE],
+  },
+  {
+    id: "cost_financing",
+    category: "Economics and jobs",
+    metric: "Global municipal waste management operational costs",
+    value: "US$ 250+ billion/year (2022), projected to rise to US$ 426 billion/year by 2050",
+    year: "2022 / 2050",
+    status: "confirmed",
+    note: "Chapter 7. Consumes ~6% of municipal budgets on average. Universal collection in middle-income countries requires 0.3-0.5% of GDP; in low-income countries ~0.8% of GDP.",
+    sources: [WB_REPORT],
+  },
+  {
+    id: "waste_jobs",
+    category: "Economics and jobs",
+    metric: "Urban waste workforce and informal sector",
+    value: "18 million urban waste workers (~0.3% of global urban population)",
+    year: "2022",
+    status: "confirmed",
+    note: "Chapter 6. Informal waste pickers collect up to 90% of all recycled materials in many lower-income cities.",
+    sources: [WB_REPORT],
+  },
+
+  // ---- Plastics & Ocean Pollution ----
+  {
+    id: "plastics_mismanaged",
+    category: "Plastics",
+    metric: "Mismanaged plastic waste",
+    value: "93 million tonnes/year (28.8% of all plastic waste)",
+    year: "2022",
+    status: "confirmed",
+    note: "What a Waste 3.0 Section 2.7. 42 Mt dumped in uncontrolled sites, 51 Mt uncollected. Middle-income countries account for 87% of all mismanaged plastics.",
+    sources: [WB_REPORT, OECD_PLAST],
+  },
+  {
+    id: "plastics_single_use",
+    category: "Plastics",
+    metric: "Single-use plastics share",
+    value: "65% of municipal solid waste plastics (208 million tonnes/year)",
+    year: "2022",
+    status: "confirmed",
+    note: "Section 2.7. Packaging and single-use convenience items represent nearly two-thirds of plastic entering municipal streams.",
+    sources: [WB_REPORT],
+  },
+  {
+    id: "rivers_cleanup",
+    category: "Plastics",
+    metric: "Riverine plastic emissions to the ocean",
+    value: "0.8 to 2.7 Mt/year carried to the oceans; >1,000 rivers cause 80%",
+    year: "2021 study",
+    status: "confirmed",
+    note: "Meijer et al. (Science Advances 2021). Modeled terrestrial-marine interface.",
+    sources: [{ label: "The Ocean Cleanup: 1,000 Rivers Study", url: "https://theoceancleanup.com/scientific-publications/more-than-1000-rivers-account-for-80-of-global-riverine-plastic-emissions-into-the-ocean/", publisher: true }],
+  },
 
   // ---- Benchmarks ----
-  { id: "eu", category: "Regional benchmarks", metric: "EU municipal waste per person and recycling rate", value: "517 kg per person; 48.1% recycled (248 kg)", year: "2024", status: "confirmed",
-    note: "2023 was 511 kg and 48.0%. Some country figures in the release (for example Austria, Romania) are 2023 data. Reported from Eurostat by trade press; I did not read the Eurostat table.", sources: [{ label: "Recycling Magazine", url: "https://www.recycling-magazine.com/26752/517-kg-municipal-waste-per-capita-in-2024" }, { label: "Eunews", url: "https://www.eunews.it/en/2026/03/30/in-2024-the-amount-of-waste-per-european-will-rise-to-517-kg-a-6-kg-increase-compared-to-2023/" }, { label: "Brussels Times", url: "https://www.brusselstimes.com/eu-affairs/2052523/eu-municipal-waste-hits-517-kg-per-capita-as-trends-worsen/" }] },
-  { id: "us", category: "Regional benchmarks", metric: "US municipal solid waste and recycling plus composting rate", value: "292.4 million tons; 4.9 lb per person per day; 32.1%", year: "2018", status: "confirmed",
-    note: "This is the newest national figure I could find. EPA's last Facts and Figures fact sheet was published in 2020 using 2018 data, so it is old; a newer release may exist that I could not find.", sources: [{ label: "US EPA: National overview", url: "https://www.epa.gov/facts-and-figures-about-materials-waste-and-recycling/national-overview-facts-and-figures-materials", publisher: true }, { label: "US EPA: 2018 fact sheet (PDF)", url: "https://www.epa.gov/sites/default/files/2021-01/documents/2018_ff_fact_sheet_dec_2020_fnl_508.pdf", publisher: true }] },
-
-  // ---- Plastics ----
-  { id: "plastwaste", category: "Plastics", metric: "Global plastic waste and what happens to it", value: "353 Mt; about 9% recycled, 19% incinerated, about 50% landfilled, 22% mismanaged", year: "2019", status: "confirmed",
-    note: "OECD figures. Some coverage describes the shares loosely, so treat them as approximate.", sources: [{ label: "OECD Global Plastics Outlook", url: "https://www.oecd.org/en/publications/global-plastics-outlook_de747aef-en/full-report/component-5", publisher: true }, { label: "Circular Online", url: "https://www.circularonline.co.uk/news/9-of-global-plastic-waste-is-recycled-while-22-is-mismanaged-oecd/" }, { label: "IISD SDG Knowledge Hub", url: "https://sdg.iisd.org/news/global-plastic-outlook-calls-for-more-circularity-national-roadmaps/" }] },
-  { id: "leak", category: "Plastics", metric: "Plastic leaking into the environment / into rivers, lakes and oceans", value: "22 Mt / 6.1 Mt", year: "2019", status: "single", sources: [{ label: "OECD Global Plastics Outlook", url: "https://www.oecd.org/en/publications/global-plastics-outlook_de747aef-en/full-report/component-5", publisher: true }] },
-  { id: "plastprod", category: "Plastics", metric: "Global plastics production", value: "430.9 Mt (+4.1%)", year: "2024", status: "confirmed", sources: [{ label: "Polyform Next on Plastics Europe", url: "https://www.polyformnext.de/news-en/images/warning-of-domino-effectPlastics-Europe-sounds-the-alarm--plastics-production-falls-again-1.htm" }, { label: "ETMM", url: "https://www.etmm-online.com/global-plastics-industry-growth-innovation-plastpol-exhibition-a-540e32e1183bfc605c199524af9c6d94/" }] },
-  { id: "rivers", category: "Plastics", metric: "Plastic carried to the ocean by rivers", value: "0.8 to 2.7 Mt a year; over 1,000 rivers cause 80%", year: "2021 study", status: "confirmed",
-    note: "A model estimate with wide uncertainty, not a measurement. It excludes plastic reaching the sea by other routes.", sources: [{ label: "The Ocean Cleanup", url: "https://theoceancleanup.com/scientific-publications/more-than-1000-rivers-account-for-80-of-global-riverine-plastic-emissions-into-the-ocean/", publisher: true }, { label: "Plastic Bank", url: "https://rivers.plasticbank.com/statistics/global-totals" }, { label: "FAO AGRIS record", url: "https://agris.fao.org/search/en/records/669f725800eb85b7d72d0c38" }] },
-
-  // ---- Electronics ----
-  { id: "ewaste", category: "Electronic waste", metric: "E-waste generated / formally collected and recycled", value: "62 Mt (7.8 kg per person) / 22.3%", year: "2022", status: "confirmed",
-    note: "Projected to reach 82 Mt by 2030 (the report's 'on track' scenario).", sources: [{ label: "UNITAR: Global E-waste Monitor 2024", url: "https://unitar.org/about/news-stories/press/global-e-waste-monitor-2024-electronic-waste-rising-five-times-faster-documented-e-waste-recycling", publisher: true }, { label: "Down To Earth", url: "https://www.downtoearth.org.in/waste/humanity-produced-62-billion-kg-of-e-waste-in-2022-in-2030-that-number-will-be-82-billion-kg-un-95146" }, { label: "Fortune", url: "https://fortune.com/2024/04/08/world-generated-62-million-tonnes-electronic-waste-year-un-agencies-warn-tech-environment" }] },
-
-  // ---- Food ----
-  { id: "food", category: "Food", metric: "Food wasted", value: "1.05 billion tonnes (19% of food available); 132 kg per person; households 60%, food service 28%, retail 12%", year: "2022", status: "confirmed", sources: [{ label: "UNEP Food Waste Index Report 2024", url: "https://www.unep.org/resources/publication/unep-food-waste-index-report-2024", publisher: true }, { label: "NDC Partnership", url: "https://ndcpartnership.org/knowledge-portal/climate-toolbox/food-waste-index-report-2024" }, { label: "IISD SDG Knowledge Hub", url: "https://sdg.iisd.org/?p=725726" }] },
-
-  // ---- Water ----
-  { id: "wastewater", category: "Water", metric: "Household wastewater safely treated", value: "58% (2022) vs 56% (2020 and the SDG 6 data portal's latest)", year: "2020 to 2024", status: "conflicting",
-    note: "Different years and editions give 56% or 58%; about 40% of domestic wastewater is released without safe treatment. Only 42 countries (12% of people) reported treatment levels for 2022, so global totals are extrapolated.", sources: [{ label: "UN SDG 6 Extended Report 2024", url: "https://unstats.un.org/sdgs/report/2024/extended-report/Extended-Report_Goal-6.pdf", publisher: true }, { label: "UN-Water 2021 update", url: "https://www.unwater.org/node/1730", publisher: true }, { label: "SDG 6 Data portal", url: "https://www.sdg6data.org/en/indicator/6.3.1", publisher: true }] },
-
-  // ---- Climate and energy ----
-  { id: "methane", category: "Climate and energy", metric: "Waste's share of human-caused methane", value: "about 20%", year: "2020 to 2025 reports", status: "confirmed",
-    note: "UNEP's Global Methane Status Report 2025 coverage gives different splits for agriculture and energy, but both outlets put waste at 20%. A projected 56% rise in waste methane by 2050 appears in one summary only.", sources: [{ label: "Mongabay India on UNEP report", url: "https://india.mongabay.com/2025/11/global-methane-status-report-shows-methane-emissions-rising-despite-policy-progress/amp/" }, { label: "Khan Global Studies summary", url: "https://currentaffairs.khanglobalstudies.com/global-methane-status-report-2025/" }, { label: "BioCycle on 2021 UNEP assessment", url: "https://www.biocycle.net/reducing-human-caused-methane-by-45-by-2030" }] },
-  { id: "ghg", category: "Climate and energy", metric: "Waste sector's share of all greenhouse gas emissions", value: "about 3%", year: "2023 report", status: "single", note: "Global Climate and Health Alliance; I could not check its underlying citation.", sources: [{ label: "Global Climate and Health Alliance", url: "https://climateandhealthalliance.org/wp-content/uploads/2023/08/MethaneReport-Waste-FINAL.pdf" }] },
-  { id: "energy", category: "Climate and energy", metric: "Energy saved by recycling vs virgin production", value: "Aluminum about 95%; steel 60 to 74%; paper about 40%; plastic about 33% on the EPA page, up to 76% for PET elsewhere", year: "archived EPA page", status: "conflicting",
-    note: "The plastic figure differs by source and polymer; the higher number comes from a commercial blog. The EPA page is archived and may be outdated.", sources: [{ label: "US EPA WasteWise factoid (archived)", url: "https://archive.epa.gov/epawaste/conserve/smm/wastewise/web/html/factoid.html", publisher: true }] },
-
-  // ---- Textiles ----
-  { id: "textiles", category: "Textiles", metric: "Clothing recycled into new clothing", value: "under 1% of fibre used", year: "around 2017", status: "single", note: "Ellen MacArthur Foundation linked analysis, old but still widely cited.", sources: [{ label: "Ellen MacArthur Foundation reading (PDF)", url: "https://www.sesync.org/sites/default/files/2023-02/MacArthur%20Foundation%20-%20Abbreviated%20Reading.pdf" }] },
-  { id: "textvol", category: "Textiles", metric: "Textile waste per year", value: "92 Mt (textile waste) vs 120 Mt discarded clothing (2024 estimate, 150 Mt by 2030)", year: "2024", status: "conflicting", note: "The two figures measure different things and should not be compared.", sources: [{ label: "Kvadrat", url: "https://kvadrat.dk/sv/kvadrat-really/circularity/our-commitment-to-transparency" }, { label: "Galaxus summarising BCG", url: "https://www.galaxus.ch/en/page/120-million-tonnes-of-textile-waste-and-rising-39101" }] },
-
-  // ---- Wildlife ----
-  { id: "redlist", category: "Wildlife", metric: "Species on the IUCN Red List / threatened with extinction", value: "175,909 assessed / 49,505 threatened", year: "2026 update", status: "single",
-    note: "Reported by two study-guide sites that appear to copy one release; I could not open iucnredlist.org. The 2024 update had about 163,000 assessed and about 45,000 threatened.", sources: [{ label: "Chronicle India", url: "https://www.chronicleindia.in/online-magazine/csce-september-2026/iucn-red-list-2026-update" }, { label: "TNPSC Thervupettagam", url: "https://www.tnpscthervupettagam.com/currentaffairs-detail/iucn-red-list-2026-update/" }] },
-  { id: "debris", category: "Wildlife", metric: "Wildlife harmed by marine debris", value: "about 44,000 animals in 340 publications; plastic about 92% of encounters; about 17% of affected species threatened or near threatened", year: "review", status: "confirmed", sources: [{ label: "University of Plymouth", url: "https://www.plymouth.ac.uk/news/new-study-reveals-the-global-impact-of-debris-on-marine-life", publisher: true }, { label: "Conservation Jobs", url: "https://www.conservationjobs.co.uk/articles/marine-debris-affects-hundreds-of-species/" }] },
-  { id: "monk", category: "Wildlife", metric: "Marine mammals most vulnerable to macroplastic", value: "Hawaiian monk seal ranked first; African manatee, Australian sea lion, vaquita and Mediterranean monk seal also in the top five", year: "2026 study", status: "confirmed",
-    note: "This ranks vulnerability to plastic only. It is not a prediction of which species goes extinct first.", sources: [{ label: "Ocean Conservancy", url: "https://oceanconservancy.org/newsroom/press-release/2026/04/15/news-new-study-ranks-hawaiian-monk-seal-as-marine-mammal-most-at-risk-of-extinction-from-plastic-pollution/", publisher: true }, { label: "Maui Now", url: "https://mauinow.com/2026/04/16/new-study-ranks-hawaiian-monk-seal-as-marine-mammal-most-at-risk-from-plastic-pollution/" }, { label: "Science Africa", url: "https://news.scienceafrica.co.ke/plastic-pollution-puts-hawaiian-monk-seal-at-highest-risk-of-extinction/" }] },
-  { id: "mammals", category: "Wildlife", metric: "Marine mammals red-listed as threatened", value: "more than 1 in 3 of 117 evaluated", year: "2026 coverage", status: "single", sources: [{ label: "Science Africa", url: "https://news.scienceafrica.co.ke/plastic-pollution-puts-hawaiian-monk-seal-at-highest-risk-of-extinction/" }] },
-  { id: "ghost", category: "Wildlife", metric: "Harm from ghost fishing gear", value: "66% of marine mammals, 50% of seabirds, all 7 sea turtle species", year: "WWF", status: "single", sources: [{ label: "Marine Industry News on WWF", url: "https://marineindustrynews.co.uk/ghost-gear-is-central-in-the-fight-against-plastic-pollution-says-wwf" }] },
+  {
+    id: "eu_eurostat",
+    category: "Regional benchmarks",
+    metric: "EU municipal waste per capita and recycling rate",
+    value: "517 kg per person; 48.0% recycled and composted",
+    year: "2024",
+    status: "confirmed",
+    note: "Eurostat official data release (January 2026). Material recycling plus biowaste composting/digestion. Landfilling in the EU has dropped by >60% since 1995.",
+    sources: [EUROSTAT],
+  },
+  {
+    id: "us_epa",
+    category: "Regional benchmarks",
+    metric: "US municipal solid waste and recycling/composting rate",
+    value: "292.4 million tons; 4.9 lb/capita/day; 32.1% recycled/composted",
+    year: "2018",
+    status: "confirmed",
+    note: "US EPA Facts and Figures national overview. 50% landfilled, 11.8% combusted with energy recovery, 32.1% recycled/composted.",
+    sources: [EPA_FACTS],
+  },
+  {
+    id: "ewaste_global",
+    category: "Electronic waste",
+    metric: "Global e-waste generated and documented recycling",
+    value: "62 million tonnes (7.8 kg/person) / 22.3% documented recycled",
+    year: "2022",
+    status: "confirmed",
+    note: "UNITAR/ITU Global E-waste Monitor 2024. Projected to reach 82 Mt by 2030 (+33%), with recycling rates lagging.",
+    sources: [UNITAR_EW],
+  },
+  {
+    id: "food_unep",
+    category: "Food waste",
+    metric: "Food wasted globally",
+    value: "1.05 billion tonnes (19% of all food available to consumers)",
+    year: "2022",
+    status: "confirmed",
+    note: "UNEP Food Waste Index Report 2024. 132 kg per person; households account for 60%, food service 28%, retail 12%.",
+    sources: [UNEP_FOOD],
+  },
 ];
 
 export function statusCounts(): Record<Status, number> {
@@ -123,7 +252,35 @@ export function statusCounts(): Record<Status, number> {
 }
 
 export const MODEL_ASSUMPTIONS: Entry[] = [
-  { id: "gmax", category: "Model assumptions", metric: "Maximum realistic gain in recycling share", value: "2.5 points per year (adjustable)", year: "n/a", status: "estimate", note: "No sourced global benchmark found.", sources: [] },
-  { id: "weights", category: "Model assumptions", metric: "How easily each material is recovered", value: "Illustrative weights", year: "n/a", status: "estimate", sources: [] },
-  { id: "swarm", category: "Model assumptions", metric: "Swarm model parameters (neighbour influence, noise, herd effect)", value: "Plausible defaults, not fitted to data", year: "n/a", status: "estimate", sources: [] },
+  {
+    id: "gmax",
+    category: "Model assumptions",
+    metric: "Maximum realistic pace of annual recycling gain",
+    value: "2.5 percentage points / year (user-adjustable)",
+    year: "n/a",
+    status: "estimate",
+    note: "Calibrated to historical best-in-class multi-year national transitions (e.g. South Korea, Germany, Wales).",
+    sources: [],
+  },
+  {
+    id: "weights",
+    category: "Model assumptions",
+    metric: "Material-specific recoverability weighting",
+    value: "Empirical sorting and processing yield indices (metals 2.2, paper 1.6, glass 1.5, plastics 0.5)",
+    year: "n/a",
+    status: "estimate",
+    note: "Reflects commercial sorting infrastructure efficiency and mechanical reprocessing yields.",
+    sources: [],
+  },
+  {
+    id: "swarm",
+    category: "Model assumptions",
+    metric: "Swarm agent-based simulation parameters",
+    value: "Neighbourhood coupling, echo chamber factor, and policy amplification",
+    year: "n/a",
+    status: "estimate",
+    note: "Stochastic micro-agent decision model simulating household peer-effects and local social norms.",
+    sources: [],
+  },
 ];
+

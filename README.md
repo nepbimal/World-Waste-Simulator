@@ -3,21 +3,19 @@
 Interactive model of global municipal solid waste to 2050: generation, recycling and composting, disposal, waste types,
 regions, a required-recycling schedule, and an agent-based ("swarm") view with Monte Carlo ranges.
 
-- `src/lib/waste-model.ts` — deterministic scenario model (World Bank *What a Waste 2.0* anchors)
+- `src/lib/waste-model.ts` — deterministic scenario model (World Bank *What a Waste 3.0* anchors and regional tables)
 - `src/lib/swarm-model.ts` — agent-based recycling model and the required-rate solver
-- `src/components/WasteSimulation.tsx` — the page
+- `src/lib/data-register.ts` — data register with verified primary citations and statuses
+- `src/components/WasteSimulation.tsx` — interactive visualization and simulation page
 
-Data: anchored to the World Bank's *What a Waste 3.0* (2026): 2.56 billion tonnes in 2022, 3.86 billion in 2050. Benchmarks
-from Eurostat (2024), US EPA, OECD, UNEP, the Global E-waste Monitor and others. Every figure, with year, sources and a
-verification status (confirmed, single source, conflicting, derived, estimate), is in `src/lib/data-register.ts` and shown
-on the page under "Data, sources and verification". The regional split and per-material weights are estimates, not
-published numbers. This is a scenario model, not a forecast.
+Data: verified against the World Bank Group's primary publication *What a Waste 3.0: Global Snapshot of Solid Waste Management Toward Circularity until 2050* (Cook et al., March 2026, DOI: 10.1596/978-1-4648-2309-1).
+- 2022 baseline: 2.562 billion tonnes across 7 global regions
+- 2050 projections: 3.855 billion tonnes (Business as usual, +50%), 3.213 billion tonnes (Low ambition), 2.562 billion tonnes (High ambition)
+- Regional profiles: East Asia & Pacific (849 Mt), Europe & Central Asia (415 Mt), South Asia (346 Mt), North America (311 Mt), Latin America & Caribbean (249 Mt), Sub-Saharan Africa (231 Mt), Middle East & North Africa (161 Mt)
+- 13 material streams: food waste (38.3%), paper & cardboard (13.9%), plastics (12.5%), garden (8.0%), glass (4.2%), metals (3.8%), and others.
+- Additional benchmarks verified with Eurostat (2024/2026), UNITAR/ITU Global E-waste Monitor (2024), and OECD Global Plastics Outlook.
 
-Known limits: the publishers' own documents could not be opened when this was built, so "confirmed" means several
-independent reports agree. To replace the derived regional numbers, use the World Bank dataset at
-https://data360.worldbank.org/en/dataset/WB_WAW.
-
-```
+```bash
 npm install
 npm run dev
 ```

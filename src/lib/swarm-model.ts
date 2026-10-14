@@ -47,7 +47,8 @@ export function runSwarm(inp: SwarmInputs, gen: YearPoint[]): Band[] {
         a[i] = 0.3 + 0.7 * rnd();
         w[i] = 1 + 4 * rnd() ** 3; // heavy-tailed influence
       }
-      const push = (inp.recoveryTarget / 100 / years / CAP) * (0.4 + 1 - r.recovery2022);
+      const deltaRate = Math.max(0, (inp.recoveryTarget - 21.39) / 100);
+      const push = (deltaRate / years / CAP) * (0.4 + 1 - r.recovery2022);
       return { p, a, w, push };
     });
     for (let t = 0; t <= years; t++) {
@@ -101,7 +102,7 @@ export type Schedule = {
 // Required recycling path from today to `target` (0..1) by `targetYear`, using generation from `gen`.
 export function requiredSchedule(gen: YearPoint[], target: number, targetYear: number, maxGain: number): Schedule {
   const now = gen[NOW_YEAR - START_YEAR];
-  const bau = simulate({ growthCut: 0, recoveryTarget: 2 })[NOW_YEAR - START_YEAR];
+  const bau = simulate({ growthCut: 0, recoveryTarget: 27 })[NOW_YEAR - START_YEAR];
   const rNow = bau.recoveryRate;
   const span = targetYear - NOW_YEAR;
   const gain = (target - rNow) / span; // fraction per year

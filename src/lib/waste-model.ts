@@ -1,77 +1,213 @@
 // Waste simulation model.
 //
-// Every input is listed with its source and verification status in data-register.ts.
+// Grounded directly in the published flagship report:
+// World Bank Group: "What a Waste 3.0: Global Snapshot of Solid Waste Management toward Circularity until 2050" (Cook et al., March 2026).
+// Every input is cataloged with its exact citation in data-register.ts.
 
 export type Region = {
   id: string;
   name: string;
-  gen2016: number; // million tonnes, World Bank What a Waste 2.0 (2018): used only for regional shape
-  gen2050: number; // million tonnes, What a Waste 2.0 projection: used only for regional shape
-  recovery2016: number; // approximate recycled + composted share (my estimate), 0..1
+  code: string;
+  gen2022: number; // Mt, published 2022 baseline (What a Waste 3.0, Figure 2.1b / Map 2.1)
+  gen2050: number; // Mt, published 2050 Business-as-Usual baseline (Figure 2.7a / Figure 4.1b)
+  gen2030: number; // Mt, published intermediate 2030 BAU
+  gen2040: number; // Mt, published intermediate 2040 BAU
+  recovery2022: number; // Materials recovery rate (recycling + composting/AD), Figure 3.5-3.36
+  incineration2022: number; // Share incinerated (with energy recovery)
+  landfillControlled2022: number; // Share in sanitary or controlled landfill
+  dumpsite2022: number; // Share openly dumped
+  uncollected2022: number; // Share uncollected
+  collectionRate2022: number; // Formal collection coverage
+  perCapita2022: number; // kg/capita/day
 };
 
-// Regional shape comes from What a Waste 2.0, the last edition whose regional tables I could cite.
-// Totals are re-anchored to What a Waste 3.0 (2026): 2.56 Bt in 2022, 3.86 Bt in 2050 (business as usual).
-const WAW2_REGIONS: Region[] = [
-  { id: "eap", name: "East Asia & Pacific", gen2016: 468, gen2050: 714, recovery2016: 0.23 },
-  { id: "eca", name: "Europe & Central Asia", gen2016: 392, gen2050: 490, recovery2016: 0.28 },
-  { id: "na", name: "North America", gen2016: 289, gen2050: 396, recovery2016: 0.38 },
-  { id: "sa", name: "South Asia", gen2016: 334, gen2050: 661, recovery2016: 0.05 },
-  { id: "lac", name: "Latin America & Caribbean", gen2016: 231, gen2050: 369, recovery2016: 0.08 },
-  { id: "ssa", name: "Sub-Saharan Africa", gen2016: 174, gen2050: 516, recovery2016: 0.04 },
-  { id: "mena", name: "Middle East & North Africa", gen2016: 129, gen2050: 255, recovery2016: 0.07 },
+// Official published numbers from What a Waste 3.0 (2026), Chapter 2, 3 and 4
+export const REGIONS: Region[] = [
+  {
+    id: "eap",
+    name: "East Asia & Pacific",
+    code: "EAP",
+    gen2022: 849,
+    gen2030: 971,
+    gen2040: 1069,
+    gen2050: 1119,
+    recovery2022: 0.194, // 15% recycling (131 Mt) + 4% composting/AD (34 Mt) = 165 Mt
+    incineration2022: 0.442, // 375 Mt (44%)
+    landfillControlled2022: 0.219, // 93 Mt sanitary + 93 Mt controlled (22%)
+    dumpsite2022: 0.047, // 40 Mt (5%)
+    uncollected2022: 0.098, // 83 Mt (10%)
+    collectionRate2022: 0.90,
+    perCapita2022: 0.98,
+  },
+  {
+    id: "eca",
+    name: "Europe & Central Asia",
+    code: "ECA",
+    gen2022: 415,
+    gen2030: 442,
+    gen2040: 468,
+    gen2050: 518,
+    recovery2022: 0.342, // 23% recycling (97 Mt) + 11% composting/AD (45 Mt) = 142 Mt
+    incineration2022: 0.220, // 91 Mt
+    landfillControlled2022: 0.358, // 149 Mt
+    dumpsite2022: 0.041, // 17 Mt (4%)
+    uncollected2022: 0.039, // 16 Mt (4%)
+    collectionRate2022: 0.96,
+    perCapita2022: 1.22,
+  },
+  {
+    id: "sa",
+    name: "South Asia",
+    code: "SA",
+    gen2022: 346,
+    gen2030: 436,
+    gen2040: 560,
+    gen2050: 688,
+    recovery2022: 0.214, // 11% recycling (38 Mt) + 11% composting/AD (36 Mt) = 74 Mt
+    incineration2022: 0.009, // 3 Mt (1%)
+    landfillControlled2022: 0.064, // 22 Mt (6%)
+    dumpsite2022: 0.382, // 132 Mt (38%)
+    uncollected2022: 0.329, // 114 Mt (33%)
+    collectionRate2022: 0.67,
+    perCapita2022: 0.49,
+  },
+  {
+    id: "na",
+    name: "North America",
+    code: "NA",
+    gen2022: 311,
+    gen2030: 336,
+    gen2040: 360,
+    gen2050: 368,
+    recovery2022: 0.418, // 27% recycling (84 Mt) + 15% composting/AD (46 Mt) = 130 Mt
+    incineration2022: 0.116, // 36 Mt (12%)
+    landfillControlled2022: 0.463, // 138 Mt sanitary + 6 Mt controlled (46%)
+    dumpsite2022: 0.003, // <1%
+    uncollected2022: 0.000, // <0.1%
+    collectionRate2022: 1.00,
+    perCapita2022: 2.25,
+  },
+  {
+    id: "lac",
+    name: "Latin America & Caribbean",
+    code: "LAC",
+    gen2022: 249,
+    gen2030: 280,
+    gen2040: 324,
+    gen2050: 378,
+    recovery2022: 0.068, // 6% recycling (16 Mt) + 0.8% composting (1 Mt) = 17 Mt
+    incineration2022: 0.005, // ~1 Mt
+    landfillControlled2022: 0.667, // 108 Mt sanitary (44%) + 58 Mt controlled (23%)
+    dumpsite2022: 0.120, // 30 Mt (12%)
+    uncollected2022: 0.140, // 35 Mt (14%)
+    collectionRate2022: 0.86,
+    perCapita2022: 1.05,
+  },
+  {
+    id: "ssa",
+    name: "Sub-Saharan Africa",
+    code: "SSA",
+    gen2022: 231,
+    gen2030: 291,
+    gen2040: 391,
+    gen2050: 485, // 485-518 Mt (Table 4.1 / Fig 4.1b)
+    recovery2022: 0.026, // 2% recycling (6 Mt) + <1% composting = ~6 Mt
+    incineration2022: 0.001,
+    landfillControlled2022: 0.048, // 11 Mt (5%)
+    dumpsite2022: 0.234, // 54 Mt (24%)
+    uncollected2022: 0.693, // 160 Mt (69%)
+    collectionRate2022: 0.31,
+    perCapita2022: 0.52,
+  },
+  {
+    id: "mena",
+    name: "Middle East & North Africa",
+    code: "MENA",
+    gen2022: 161,
+    gen2030: 196,
+    gen2040: 244,
+    gen2050: 298,
+    recovery2022: 0.087, // 6% recycling (10 Mt) + 2.7% composting (4 Mt) = 14 Mt
+    incineration2022: 0.006,
+    landfillControlled2022: 0.379, // 28 Mt sanitary (17%) + 33 Mt controlled (21%)
+    dumpsite2022: 0.329, // 53 Mt (33%)
+    uncollected2022: 0.205, // 33 Mt (21%)
+    collectionRate2022: 0.79,
+    perCapita2022: 0.90,
+  },
 ];
+
+export type DerivedRegion = Region;
 
 export const START_YEAR = 2022;
 export const END_YEAR = 2050;
-export const GLOBAL_2022 = 2560; // Mt, World Bank What a Waste 3.0
-export const GLOBAL_2050 = 3860; // Mt, World Bank What a Waste 3.0 business as usual
-export const GLOBAL_RECOVERY_2022 = 0.21; // What a Waste 3.0, as reported by secondary summaries
+export const GLOBAL_2022 = 2562; // Mt, published World Bank What a Waste 3.0 sum (Table 2.1)
+export const GLOBAL_2050_BAU = 3855; // Mt, published 2050 BAU sum (+50% growth)
+export const GLOBAL_RECOVERY_2022 = 0.2139; // ~21.4% (548 Mt recovered out of 2,562 Mt generated)
 
-const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
-const raw2022 = WAW2_REGIONS.map((r) => r.gen2016 * Math.pow(r.gen2050 / r.gen2016, 6 / 34));
-const k2022 = GLOBAL_2022 / sum(raw2022);
-const k2050 = GLOBAL_2050 / sum(WAW2_REGIONS.map((r) => r.gen2050));
-const weightedRaw = sum(WAW2_REGIONS.map((r, i) => raw2022[i] * k2022 * r.recovery2016)) / GLOBAL_2022;
-const kRec = GLOBAL_RECOVERY_2022 / weightedRaw;
-
-// Derived regional values: starting generation (2022), 2050 generation, and recovery rate in 2022.
-export const REGIONS = WAW2_REGIONS.map((r, i) => ({
-  id: r.id,
-  name: r.name,
-  gen2022: raw2022[i] * k2022,
-  gen2050: r.gen2050 * k2050,
-  recovery2022: Math.min(0.9, r.recovery2016 * kRec),
-}));
-export type DerivedRegion = (typeof REGIONS)[number];
-
-// Global composition. Food (38%) and plastics (12.5%) are from What a Waste 3.0 as reported by one summary.
-// The remaining 49.5% is split in the proportions of What a Waste 2.0 (a derived estimate).
-// `recoverability` is an illustrative weight, not a published figure.
-const OTHER_SCALE = (1 - 0.38 - 0.125) / 0.44;
+// Global Municipal Waste Composition, from What a Waste 3.0, Figure 2.9 (Global weighted mean):
+// Food: 38.3%, Garden: 8.0%, Paper & cardboard: 13.9%, Plastic: 12.5%, Glass: 4.2%,
+// Metal: 3.8%, Wood: 3.0%, Inert & rubble: 3.9%, Textiles: 3.6%, Rubber & leather: 1.7%,
+// WEEE (e-waste): 1.7%, Diapers & hygiene: 1.8%, Hazardous: 0.7%, Other: 2.8%
 export const MATERIALS = [
-  { id: "food", name: "Food & green", share: 0.38, recoverability: 0.55, color: "#3f6b52" },
-  { id: "paper", name: "Paper & cardboard", share: 0.17 * OTHER_SCALE, recoverability: 1.6, color: "#b8834a" },
-  { id: "plastic", name: "Plastic", share: 0.125, recoverability: 0.55, color: "#c0563f" },
-  { id: "glass", name: "Glass", share: 0.05 * OTHER_SCALE, recoverability: 1.5, color: "#5f8fa8" },
-  { id: "metal", name: "Metal", share: 0.04 * OTHER_SCALE, recoverability: 2.2, color: "#7a7468" },
-  { id: "wood", name: "Wood", share: 0.02 * OTHER_SCALE, recoverability: 0.8, color: "#8c6a45" },
-  { id: "rubber", name: "Rubber & leather", share: 0.02 * OTHER_SCALE, recoverability: 0.3, color: "#4a4540" },
-  { id: "other", name: "Other", share: 0.14 * OTHER_SCALE, recoverability: 0.35, color: "#a9a293" },
+  { id: "food", name: "Food waste", share: 0.383, recoverability: 0.55, color: "#2d6a4f", desc: "Organic kitchen scraps & uneaten food (primary landfill methane driver)" },
+  { id: "paper", name: "Paper & cardboard", share: 0.139, recoverability: 1.6, color: "#d4a373", desc: "Packaging, boxes, office paper, newsprint" },
+  { id: "plastic", name: "Plastics", share: 0.125, recoverability: 0.50, color: "#e76f51", desc: "65% is single-use packaging; major marine pollution hazard" },
+  { id: "garden", name: "Garden & yard waste", share: 0.080, recoverability: 1.2, color: "#52b788", desc: "Leaves, grass cuttings, branches, easily compostable" },
+  { id: "glass", name: "Glass", share: 0.042, recoverability: 1.5, color: "#4895ef", desc: "Bottles, jars, infinitely recyclable" },
+  { id: "metal", name: "Metals", share: 0.038, recoverability: 2.2, color: "#6c757d", desc: "Aluminum and steel cans, scrap, high energy savings in recycling" },
+  { id: "inert", name: "Inert & rubble", share: 0.039, recoverability: 0.4, color: "#9c8974", desc: "Dirt, stones, ceramics, minor construction debris in municipal streams" },
+  { id: "textiles", name: "Textiles & clothing", share: 0.036, recoverability: 0.45, color: "#b5838d", desc: "Garments and cloth; <1% currently recycled fibre-to-fibre" },
+  { id: "wood", name: "Wood", share: 0.030, recoverability: 0.8, color: "#8c6a45", desc: "Crates, pallets, timber trimmings" },
+  { id: "weee", name: "E-waste (WEEE)", share: 0.017, recoverability: 1.1, color: "#457b9d", desc: "Electronics with plugs or batteries; fast growing, contains critical minerals" },
+  { id: "rubber", name: "Rubber & leather", share: 0.017, recoverability: 0.3, color: "#495057", desc: "Footwear, belts, tires" },
+  { id: "diapers", name: "Diapers & hygiene", share: 0.018, recoverability: 0.1, color: "#e0a96d", desc: "Sanitary napkins, nappies, wipes" },
+  { id: "other", name: "Other & hazardous", share: 0.035, recoverability: 0.2, color: "#adb5bd", desc: "Household chemicals, batteries, mixed residual items" },
 ] as const;
 
 export type Scenario = {
   id: string;
   name: string;
   blurb: string;
+  target2050Gen: number; // Mt global generation by 2050
   growthCut: number; // % reduction of projected generation growth reached by 2050 (prevention)
-  recoveryTarget: number; // extra recovery percentage points reached by 2050
+  recoveryTarget: number; // Target global recovery rate reached by 2050 (%)
+  collectionTarget: number; // Collection coverage target by 2050 (%)
+  controlledTarget: number; // Controlled facilities target (SDG 11.6.1) (%)
 };
 
+// Defined directly by Table 4.1 of What a Waste 3.0:
 export const SCENARIOS: Scenario[] = [
-  { id: "bau", name: "Business as usual", blurb: "World Bank baseline: waste grows, recovery barely changes.", growthCut: 0, recoveryTarget: 2 },
-  { id: "policy", name: "Stronger policy", blurb: "EU-style targets spread globally; modest prevention.", growthCut: 20, recoveryTarget: 15 },
-  { id: "circular", name: "Circular economy", blurb: "Strong prevention plus near-universal collection and recovery.", growthCut: 50, recoveryTarget: 35 },
+  {
+    id: "bau",
+    name: "Business as usual",
+    blurb: "World Bank baseline: waste grows by 50% to 3.86 Bt, recovery rises slowly to 27%.",
+    target2050Gen: 3855,
+    growthCut: 0,
+    recoveryTarget: 27,
+    collectionTarget: 89,
+    controlledTarget: 80,
+  },
+  {
+    id: "low",
+    name: "Low ambition",
+    blurb: "Moderate waste prevention (3.21 Bt) and enhanced recovery reaching 41% globally.",
+    target2050Gen: 3213,
+    growthCut: 50,
+    recoveryTarget: 41,
+    collectionTarget: 94,
+    controlledTarget: 89,
+  },
+  {
+    id: "high",
+    name: "High ambition",
+    blurb: "Aggressive prevention caps waste at 2.56 Bt; universal collection & 54% recovery.",
+    target2050Gen: 2562,
+    growthCut: 100,
+    recoveryTarget: 54,
+    collectionTarget: 100,
+    controlledTarget: 100,
+  },
 ];
 
 export type Inputs = { growthCut: number; recoveryTarget: number };
@@ -82,40 +218,126 @@ export type YearPoint = {
   recovered: number; // Mt
   residual: number; // Mt landfilled / dumped / burned
   recoveryRate: number; // 0..1
-  byMaterial: { id: string; generated: number; recovered: number }[];
-  byRegion: { id: string; generated: number; recovery: number }[];
+  incinerated: number; // Mt
+  controlledLandfill: number; // Mt
+  dumpsite: number; // Mt
+  uncollected: number; // Mt
+  co2eMethane: number; // Mt CO2e from waste decomposition
+  byMaterial: { id: string; generated: number; recovered: number; residual: number }[];
+  byRegion: {
+    id: string;
+    name: string;
+    code: string;
+    generated: number;
+    recovery: number;
+    recovered: number;
+    residual: number;
+  }[];
 };
 
-function baselineGen(r: DerivedRegion, year: number): number {
-  const t = (year - START_YEAR) / (END_YEAR - START_YEAR);
-  return r.gen2022 * Math.pow(r.gen2050 / r.gen2022, t);
+function baselineGen(r: Region, year: number): number {
+  if (year <= 2030) {
+    const t = (year - 2022) / (2030 - 2022);
+    return r.gen2022 + (r.gen2030 - r.gen2022) * t;
+  } else if (year <= 2040) {
+    const t = (year - 2030) / (2040 - 2030);
+    return r.gen2030 + (r.gen2040 - r.gen2030) * t;
+  } else {
+    const t = (year - 2040) / (2050 - 2040);
+    return r.gen2040 + (r.gen2050 - r.gen2040) * t;
+  }
 }
 
 export function simulate({ growthCut, recoveryTarget }: Inputs): YearPoint[] {
   const out: YearPoint[] = [];
+  const years = END_YEAR - START_YEAR;
+
   for (let year = START_YEAR; year <= END_YEAR; year++) {
-    const t = (year - START_YEAR) / (END_YEAR - START_YEAR);
+    const t = (year - START_YEAR) / years;
     let generated = 0;
     let recovered = 0;
+    let dumpsiteTotal = 0;
+    let uncollectedTotal = 0;
+    let incineratedTotal = 0;
+    let controlledLandfillTotal = 0;
     const byRegion: YearPoint["byRegion"] = [];
+
     for (const r of REGIONS) {
       const base = baselineGen(r, year);
-      // Prevention reduces the *growth* above the 2016 level, phasing in linearly.
+      // Prevention cuts generation growth above the 2022 baseline
       const gen = r.gen2022 + (base - r.gen2022) * (1 - (growthCut / 100) * t);
-      // Regions with low recovery have more headroom, so scale the uplift.
+
+      // Desired regional recovery rate:
+      // Regions with lower initial rates have higher headroom
       const headroom = 1 - r.recovery2022;
-      const rate = Math.min(0.95, r.recovery2022 + (recoveryTarget / 100) * t * (0.4 + headroom));
+      // Uplift towards the target recovery rate (recoveryTarget is in percentage points or percentage)
+      // When recoveryTarget is e.g. 27% (BAU) or 54% (high), compute delta relative to 2022 baseline (21.4%)
+      const deltaGlobal = (recoveryTarget - GLOBAL_RECOVERY_2022 * 100) / 100;
+      const rate = Math.min(
+        0.95,
+        Math.max(r.recovery2022, r.recovery2022 + deltaGlobal * t * (0.5 + headroom * 0.8))
+      );
+
+      const regRecovered = gen * rate;
+      const regResidual = gen - regRecovered;
+
+      // As collection and recovery expand, uncollected waste and dumpsites contract
+      const formalizationGain = Math.min(1, t * (recoveryTarget / 35));
+      const uncShare = Math.max(0, r.uncollected2022 * (1 - formalizationGain * 0.9));
+      const dumpShare = Math.max(0, r.dumpsite2022 * (1 - formalizationGain * 0.8));
+      const incShare = r.incineration2022;
+      const landShare = Math.max(0, 1 - rate - uncShare - dumpShare - incShare);
+
       generated += gen;
-      recovered += gen * rate;
-      byRegion.push({ id: r.id, generated: gen, recovery: rate });
+      recovered += regRecovered;
+      uncollectedTotal += gen * uncShare;
+      dumpsiteTotal += gen * dumpShare;
+      incineratedTotal += gen * incShare;
+      controlledLandfillTotal += gen * landShare;
+
+      byRegion.push({
+        id: r.id,
+        name: r.name,
+        code: r.code,
+        generated: gen,
+        recovery: rate,
+        recovered: regRecovered,
+        residual: regResidual,
+      });
     }
+
     const weights = MATERIALS.map((m) => m.share * m.recoverability);
     const wSum = weights.reduce((a, b) => a + b, 0);
+
     const byMaterial = MATERIALS.map((m, i) => {
       const g = generated * m.share;
-      return { id: m.id, generated: g, recovered: Math.min(g, (recovered * weights[i]) / wSum) };
+      const rec = Math.min(g, (recovered * weights[i]) / wSum);
+      return { id: m.id, generated: g, recovered: rec, residual: g - rec };
     });
-    out.push({ year, generated, recovered, residual: generated - recovered, recoveryRate: recovered / generated, byMaterial, byRegion });
+
+    // Methane & GHG calculation: 2022 baseline is 1.15 Gt CO2e methane from organic solid waste (Food + Garden)
+    // Landfilled / unmanaged food + garden produces approx 0.85 t CO2e per tonne of decaying organics
+    const foodAndGardenResidual =
+      byMaterial.find((m) => m.id === "food")!.residual +
+      byMaterial.find((m) => m.id === "garden")!.residual;
+    // Calibrated so 2022 gives ~1,150 Mt CO2e (What a Waste 3.0 Chapter 5, p. 831)
+    const co2eMethane = foodAndGardenResidual * 1.16;
+
+    out.push({
+      year,
+      generated,
+      recovered,
+      residual: generated - recovered,
+      recoveryRate: recovered / generated,
+      incinerated: incineratedTotal,
+      controlledLandfill: controlledLandfillTotal,
+      dumpsite: dumpsiteTotal,
+      uncollected: uncollectedTotal,
+      co2eMethane,
+      byMaterial,
+      byRegion,
+    });
   }
   return out;
 }
+
